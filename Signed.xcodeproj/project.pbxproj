@@ -13,6 +13,25 @@
 		DD729C0A2AB836FB00D8F6F2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD729C092AB836FB00D8F6F2 /* ContentView.swift */; };
 		DD729C0C2AB836FC00D8F6F2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DD729C0B2AB836FC00D8F6F2 /* Assets.xcassets */; };
 		DD729C102AB836FC00D8F6F2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DD729C0F2AB836FC00D8F6F2 /* Preview Assets.xcassets */; };
+		DD729C192AB83A9400D8F6F2 /* RenderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD729C182AB83A9400D8F6F2 /* RenderView.swift */; };
+		DD729C1C2AB83BF300D8F6F2 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD729C1B2AB83BF300D8F6F2 /* Model.swift */; };
+		DD729C1F2AB83E7200D8F6F2 /* Drawables.metal in Sources */ = {isa = PBXBuildFile; fileRef = DD729C1E2AB83E7200D8F6F2 /* Drawables.metal */; };
+		DD729C212AB83E7B00D8F6F2 /* Drawables.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD729C202AB83E7B00D8F6F2 /* Drawables.swift */; };
+		DD729C242AB83F1C00D8F6F2 /* Misc.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD729C232AB83F1C00D8F6F2 /* Misc.swift */; };
+		DD729C262AB83F8B00D8F6F2 /* Math.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD729C252AB83F8B00D8F6F2 /* Math.swift */; };
+		DD729C292AB8630800D8F6F2 /* Modeler.metal in Sources */ = {isa = PBXBuildFile; fileRef = DD729C282AB8630800D8F6F2 /* Modeler.metal */; };
+		DD729C2B2AB8633600D8F6F2 /* ModelerPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD729C2A2AB8633600D8F6F2 /* ModelerPipeline.swift */; };
+		DD729C2D2AB8636C00D8F6F2 /* ModelerStates.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD729C2C2AB8636C00D8F6F2 /* ModelerStates.swift */; };
+		DD729C302AB863DC00D8F6F2 /* Render.metal in Sources */ = {isa = PBXBuildFile; fileRef = DD729C2F2AB863DC00D8F6F2 /* Render.metal */; };
+		DD729C322AB8640800D8F6F2 /* RenderPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD729C312AB8640800D8F6F2 /* RenderPipeline.swift */; };
+		DD729C342AB8642300D8F6F2 /* RenderStates.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD729C332AB8642300D8F6F2 /* RenderStates.swift */; };
+		DD729C362AB8644500D8F6F2 /* SignedCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD729C352AB8644500D8F6F2 /* SignedCommand.swift */; };
+		DD729C382AB8648A00D8F6F2 /* SignedMaterial.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD729C372AB8648A00D8F6F2 /* SignedMaterial.swift */; };
+		DD729C3A2AB864B300D8F6F2 /* SignedData.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD729C392AB864B300D8F6F2 /* SignedData.swift */; };
+		DD729C3C2AB864E400D8F6F2 /* SignedCameras.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD729C3B2AB864E400D8F6F2 /* SignedCameras.swift */; };
+		DD729C3E2AB866EE00D8F6F2 /* SignedProject.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD729C3D2AB866EE00D8F6F2 /* SignedProject.swift */; };
+		DD729C402AB8672800D8F6F2 /* SignedObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD729C3F2AB8672800D8F6F2 /* SignedObject.swift */; };
+		DD729C422AB87E8E00D8F6F2 /* Readme.md in Resources */ = {isa = PBXBuildFile; fileRef = DD729C412AB87E8E00D8F6F2 /* Readme.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +43,27 @@
 		DD729C0B2AB836FC00D8F6F2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		DD729C0D2AB836FC00D8F6F2 /* Signed.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Signed.entitlements; sourceTree = "<group>"; };
 		DD729C0F2AB836FC00D8F6F2 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		DD729C162AB8374E00D8F6F2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		DD729C182AB83A9400D8F6F2 /* RenderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderView.swift; sourceTree = "<group>"; };
+		DD729C1B2AB83BF300D8F6F2 /* Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
+		DD729C1E2AB83E7200D8F6F2 /* Drawables.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Drawables.metal; sourceTree = "<group>"; };
+		DD729C202AB83E7B00D8F6F2 /* Drawables.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Drawables.swift; sourceTree = "<group>"; };
+		DD729C222AB83EAE00D8F6F2 /* Bridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Bridge.h; sourceTree = "<group>"; };
+		DD729C232AB83F1C00D8F6F2 /* Misc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Misc.swift; sourceTree = "<group>"; };
+		DD729C252AB83F8B00D8F6F2 /* Math.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Math.swift; sourceTree = "<group>"; };
+		DD729C282AB8630800D8F6F2 /* Modeler.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Modeler.metal; sourceTree = "<group>"; };
+		DD729C2A2AB8633600D8F6F2 /* ModelerPipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerPipeline.swift; sourceTree = "<group>"; };
+		DD729C2C2AB8636C00D8F6F2 /* ModelerStates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerStates.swift; sourceTree = "<group>"; };
+		DD729C2F2AB863DC00D8F6F2 /* Render.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Render.metal; sourceTree = "<group>"; };
+		DD729C312AB8640800D8F6F2 /* RenderPipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderPipeline.swift; sourceTree = "<group>"; };
+		DD729C332AB8642300D8F6F2 /* RenderStates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderStates.swift; sourceTree = "<group>"; };
+		DD729C352AB8644500D8F6F2 /* SignedCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignedCommand.swift; sourceTree = "<group>"; };
+		DD729C372AB8648A00D8F6F2 /* SignedMaterial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignedMaterial.swift; sourceTree = "<group>"; };
+		DD729C392AB864B300D8F6F2 /* SignedData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignedData.swift; sourceTree = "<group>"; };
+		DD729C3B2AB864E400D8F6F2 /* SignedCameras.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignedCameras.swift; sourceTree = "<group>"; };
+		DD729C3D2AB866EE00D8F6F2 /* SignedProject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignedProject.swift; sourceTree = "<group>"; };
+		DD729C3F2AB8672800D8F6F2 /* SignedObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignedObject.swift; sourceTree = "<group>"; };
+		DD729C412AB87E8E00D8F6F2 /* Readme.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = Readme.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -40,6 +80,7 @@
 		DD729BF62AB836FB00D8F6F2 = {
 			isa = PBXGroup;
 			children = (
+				DD729C412AB87E8E00D8F6F2 /* Readme.md */,
 				DD729C012AB836FB00D8F6F2 /* Signed */,
 				DD729C002AB836FB00D8F6F2 /* Products */,
 			);
@@ -56,9 +97,16 @@
 		DD729C012AB836FB00D8F6F2 /* Signed */ = {
 			isa = PBXGroup;
 			children = (
+				DD729C162AB8374E00D8F6F2 /* Info.plist */,
 				DD729C022AB836FB00D8F6F2 /* SignedApp.swift */,
 				DD729C042AB836FB00D8F6F2 /* Persistence.swift */,
 				DD729C092AB836FB00D8F6F2 /* ContentView.swift */,
+				DD729C1A2AB83BCF00D8F6F2 /* Model */,
+				DD729C172AB83A8000D8F6F2 /* Views */,
+				DD729C2E2AB8638000D8F6F2 /* RenderPipeline */,
+				DD729C272AB862DE00D8F6F2 /* ModelerPipeline */,
+				DD729C1D2AB83E5600D8F6F2 /* Drawables */,
+				DD729C222AB83EAE00D8F6F2 /* Bridge.h */,
 				DD729C0B2AB836FC00D8F6F2 /* Assets.xcassets */,
 				DD729C0D2AB836FC00D8F6F2 /* Signed.entitlements */,
 				DD729C062AB836FB00D8F6F2 /* Signed.xcdatamodeld */,
@@ -73,6 +121,59 @@
 				DD729C0F2AB836FC00D8F6F2 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		DD729C172AB83A8000D8F6F2 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				DD729C182AB83A9400D8F6F2 /* RenderView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		DD729C1A2AB83BCF00D8F6F2 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				DD729C392AB864B300D8F6F2 /* SignedData.swift */,
+				DD729C352AB8644500D8F6F2 /* SignedCommand.swift */,
+				DD729C3B2AB864E400D8F6F2 /* SignedCameras.swift */,
+				DD729C372AB8648A00D8F6F2 /* SignedMaterial.swift */,
+				DD729C3D2AB866EE00D8F6F2 /* SignedProject.swift */,
+				DD729C3F2AB8672800D8F6F2 /* SignedObject.swift */,
+				DD729C1B2AB83BF300D8F6F2 /* Model.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		DD729C1D2AB83E5600D8F6F2 /* Drawables */ = {
+			isa = PBXGroup;
+			children = (
+				DD729C1E2AB83E7200D8F6F2 /* Drawables.metal */,
+				DD729C202AB83E7B00D8F6F2 /* Drawables.swift */,
+				DD729C232AB83F1C00D8F6F2 /* Misc.swift */,
+				DD729C252AB83F8B00D8F6F2 /* Math.swift */,
+			);
+			path = Drawables;
+			sourceTree = "<group>";
+		};
+		DD729C272AB862DE00D8F6F2 /* ModelerPipeline */ = {
+			isa = PBXGroup;
+			children = (
+				DD729C282AB8630800D8F6F2 /* Modeler.metal */,
+				DD729C2A2AB8633600D8F6F2 /* ModelerPipeline.swift */,
+				DD729C2C2AB8636C00D8F6F2 /* ModelerStates.swift */,
+			);
+			path = ModelerPipeline;
+			sourceTree = "<group>";
+		};
+		DD729C2E2AB8638000D8F6F2 /* RenderPipeline */ = {
+			isa = PBXGroup;
+			children = (
+				DD729C2F2AB863DC00D8F6F2 /* Render.metal */,
+				DD729C312AB8640800D8F6F2 /* RenderPipeline.swift */,
+				DD729C332AB8642300D8F6F2 /* RenderStates.swift */,
+			);
+			path = RenderPipeline;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -135,6 +236,7 @@
 			files = (
 				DD729C102AB836FC00D8F6F2 /* Preview Assets.xcassets in Resources */,
 				DD729C0C2AB836FC00D8F6F2 /* Assets.xcassets in Resources */,
+				DD729C422AB87E8E00D8F6F2 /* Readme.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -145,10 +247,28 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DD729C362AB8644500D8F6F2 /* SignedCommand.swift in Sources */,
 				DD729C032AB836FB00D8F6F2 /* SignedApp.swift in Sources */,
+				DD729C402AB8672800D8F6F2 /* SignedObject.swift in Sources */,
+				DD729C342AB8642300D8F6F2 /* RenderStates.swift in Sources */,
 				DD729C052AB836FB00D8F6F2 /* Persistence.swift in Sources */,
 				DD729C0A2AB836FB00D8F6F2 /* ContentView.swift in Sources */,
+				DD729C3E2AB866EE00D8F6F2 /* SignedProject.swift in Sources */,
+				DD729C322AB8640800D8F6F2 /* RenderPipeline.swift in Sources */,
+				DD729C292AB8630800D8F6F2 /* Modeler.metal in Sources */,
+				DD729C2D2AB8636C00D8F6F2 /* ModelerStates.swift in Sources */,
+				DD729C3C2AB864E400D8F6F2 /* SignedCameras.swift in Sources */,
+				DD729C302AB863DC00D8F6F2 /* Render.metal in Sources */,
+				DD729C242AB83F1C00D8F6F2 /* Misc.swift in Sources */,
+				DD729C382AB8648A00D8F6F2 /* SignedMaterial.swift in Sources */,
+				DD729C3A2AB864B300D8F6F2 /* SignedData.swift in Sources */,
+				DD729C1F2AB83E7200D8F6F2 /* Drawables.metal in Sources */,
+				DD729C1C2AB83BF300D8F6F2 /* Model.swift in Sources */,
+				DD729C192AB83A9400D8F6F2 /* RenderView.swift in Sources */,
 				DD729C082AB836FB00D8F6F2 /* Signed.xcdatamodeld in Sources */,
+				DD729C212AB83E7B00D8F6F2 /* Drawables.swift in Sources */,
+				DD729C2B2AB8633600D8F6F2 /* ModelerPipeline.swift in Sources */,
+				DD729C262AB83F8B00D8F6F2 /* Math.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -277,6 +397,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Signed/Info.plist;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -292,11 +413,12 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.3;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.moenig.Signed;
+				PRODUCT_BUNDLE_IDENTIFIER = com.moenig.signed;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = Signed/Bridge.h;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -315,6 +437,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Signed/Info.plist;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -330,11 +453,12 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.3;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.moenig.Signed;
+				PRODUCT_BUNDLE_IDENTIFIER = com.moenig.signed;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = Signed/Bridge.h;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

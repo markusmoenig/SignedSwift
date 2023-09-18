@@ -11,6 +11,8 @@ import CoreData
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
 
+    var model = Model()
+    
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Item.timestamp, ascending: true)],
         animation: .default)
@@ -40,7 +42,8 @@ struct ContentView: View {
                     }
                 }
             }
-            Text("Select an item")
+            //Text("Select an item")
+            RenderView(model: model)
         }
     }
 
@@ -83,8 +86,8 @@ private let itemFormatter: DateFormatter = {
     return formatter
 }()
 
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
-    }
-}
+//struct ContentView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        ContentView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+//    }
+//}
