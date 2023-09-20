@@ -36,7 +36,7 @@ class SignedPinholeCamera : Codable, Hashable {
         data = SignedData([])
         
         if type == .project {
-            data.set("Position", float3(0, 0.3, -0.8), float2(-5, 5))
+            data.set("Position", float3(0, 0.3, -1.1), float2(-5, 5))
             data.set("Look At", float3(0, 0.0, 0), float2(-5, 5))
         } else {
             data.set("Position", float3(0, 0, -0.8), float2(-5, 5))
@@ -92,7 +92,7 @@ class SignedPinholeCamera : Codable, Hashable {
         data.set("Position", position)
         
         lookAt.y = position.y
-        data.set("Look At", lookAt)
+        //data.set("Look At", lookAt)
         
         lastZoomDelta = delta
     }
@@ -112,7 +112,7 @@ class SignedPinholeCamera : Codable, Hashable {
         data.set("Position", position)
         
         lookAt.y = position.y
-        data.set("Look At", lookAt)
+        //data.set("Look At", lookAt)
 
         lastDelta = delta
     }
@@ -137,7 +137,7 @@ class SignedPinholeCamera : Codable, Hashable {
             lookAt += add
             
             data.set("Position", position)
-            data.set("Look At", lookAt)
+            //data.set("Look At", lookAt)
         }
         
         lastDelta = delta

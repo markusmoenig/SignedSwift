@@ -252,7 +252,7 @@ class ModelerPipeline
         modelerUniform.blendOffset = cmd.blendOptions.getFloat3("offset", float3(0,0,0))
         modelerUniform.blendFrequency = cmd.blendOptions.getFloat("frequency", 1)
         modelerUniform.blendSmoothing = cmd.blendOptions.getFloat("smoothing", 5)
-
+        
         modelerUniform.id = Int32(cmd.materialId)
 
         return modelerUniform
@@ -480,8 +480,8 @@ class ModelerPipeline
     func calculateThreadGroups(_ state: MTLComputePipelineState, _ encoder: MTLComputeCommandEncoder,_ texture: MTLTexture)
     {
         
-        let w = state.threadExecutionWidth//limitThreads ? 1 : state.threadExecutionWidth
-        let h = state.maxTotalThreadsPerThreadgroup / w//limitThreads ? 1 : state.maxTotalThreadsPerThreadgroup / w
+        let w = 1//state.threadExecutionWidth//limitThreads ? 1 : state.threadExecutionWidth
+        let h = 1//state.maxTotalThreadsPerThreadgroup / w//limitThreads ? 1 : state.maxTotalThreadsPerThreadgroup / w
         let d = 1//
         let threadsPerThreadgroup = MTLSizeMake(w, h, d)
         

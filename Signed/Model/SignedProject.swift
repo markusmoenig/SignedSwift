@@ -38,7 +38,7 @@ class SignedProject: Codable {
     var materialCamera                      = SignedPinholeCamera("Material Camera", .material)
 
     /// Resolution of the 3D texture
-    var resolution                          = Int(200)
+    var resolution                          = Int(512)
     
     /// How many pixels per meter
     var pixelsPerMeter                      = Int(100)

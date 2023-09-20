@@ -1122,7 +1122,27 @@ kernel void renderBSDF(        constant RenderUniform               &renderData 
             }
         }
         
+        /*
+        bool hitPlane = false;
+        {
+            float3 normal = float3(0.0, 1.0, 0.0);
+            float denom = dot(normal, ray.direction);
+
+            if (abs(denom) > 0.0001) {
+                float dist = dot(float3(0.0, -0.5, 0.0) - ray.origin, normal) / denom;
+                if (dist >= 0.0 && t > dist) {
+                    t = dist;
+                    state.fhp = ray.origin + ray.direction * t;
+                    state.normal = normal;
+                    state.ffnormal = dot(state.normal, ray.direction) <= 0.0 ? state.normal : state.normal * -1.0;
+                    hitPlane = true;
+                }
+            }
+        }*/
+        
+        
         // Lights
+        /*
         for (int i = 0; i < renderData.numOfLights; i++)
         {
             Light light = renderData.lights[i];
@@ -1167,11 +1187,12 @@ kernel void renderBSDF(        constant RenderUniform               &renderData 
                     state.isEmitter = true;
                 }
             }
-        }
+        }*/
         
         if (t == INFINITY) {
             if (true)
                 radiance += pow(renderData.backgroundColor.xyz, 2.2) * throughput;
+//                radiance += renderData.backgroundColor.xyz;
             else {
                 float cSize = 2;
                 
@@ -1216,6 +1237,10 @@ kernel void renderBSDF(        constant RenderUniform               &renderData 
         state.mat.atDistance = 1.0;
         
         Material material = mData.material;
+        
+//        if (hitPlane) {
+//            state.mat.albedo = float3(0.2, 0.2, 0.2);
+//        }
         
         if (mData.roleType == Modeler_GeometryAndMaterial) {
             // Geometry preview material blending

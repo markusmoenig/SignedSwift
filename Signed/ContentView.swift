@@ -11,24 +11,30 @@ import CoreData
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
 
-    var model = Model()
+    var model                               : Model
+
+    @ObservedObject var currProject         : Project = Project()
     
+    @State var updateView                   : Bool = false
+
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Item.timestamp, ascending: true)],
+        sortDescriptors: [NSSortDescriptor(keyPath: \Project.index, ascending: true)],
         animation: .default)
-    private var items: FetchedResults<Item>
+    private var projects: FetchedResults<Project>
 
     var body: some View {
+        
         NavigationView {
+            
             List {
-                ForEach(items) { item in
+                ForEach(projects) { project in
                     NavigationLink {
-                        Text("Item at \(item.timestamp!, formatter: itemFormatter)")
+                        PreviewView(model: model, project: project)
                     } label: {
-                        Text(item.timestamp!, formatter: itemFormatter)
+                        Text(project.name!)
                     }
                 }
-                .onDelete(perform: deleteItems)
+                .onDelete(perform: deleteProjects)
             }
             .toolbar {
 #if os(iOS)
@@ -37,43 +43,46 @@ struct ContentView: View {
                 }
 #endif
                 ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
+                    Button(action: newProject) {
+                        Label("New Project", systemImage: "plus")
                     }
                 }
             }
-            //Text("Select an item")
-            RenderView(model: model)
+            
+
+        }
+        .onReceive(model.projectChanged) { project in
+            model.currProject = project
+            //if let renderView = model.renderView {
+            //}
         }
     }
 
-    private func addItem() {
+    private func newProject() {
         withAnimation {
-            let newItem = Item(context: viewContext)
-            newItem.timestamp = Date()
+            
+            let newProject = Project(context: viewContext)
+            newProject.name = "New Project"
+            newProject.id = UUID()
 
             do {
                 try viewContext.save()
             } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
                 let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+                print("Cannot create project", nsError)
             }
         }
     }
 
-    private func deleteItems(offsets: IndexSet) {
+    private func deleteProjects(offsets: IndexSet) {
         withAnimation {
-            offsets.map { items[$0] }.forEach(viewContext.delete)
-
+            offsets.map { projects[$0] }.forEach(viewContext.delete)
+            
             do {
                 try viewContext.save()
             } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
                 let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+                print("Cannot delet projects", nsError)
             }
         }
     }

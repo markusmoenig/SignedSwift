@@ -11,6 +11,20 @@ import MetalKit
 public class SMTKView       : MTKView
 {
     
+    enum Axis {
+        case XY
+    }
+    
+    enum Mode {
+        case Points2D
+        case Render3D
+    }
+    
+    var mode                : Mode = .Points2D
+    var axis                : Axis = .XY
+    
+    var pointRadius         : Float = 10.0
+    
     var model               : Model!
     
     var keysDown            : [Float] = []
@@ -29,8 +43,8 @@ public class SMTKView       : MTKView
     
     var renderer            : RenderPipeline? = nil
     var drawables           : MetalDrawables? = nil
-//
-//    var currentEditingCmd   : SignedCommand? = nil
+
+    var currentPoint        : Point? = nil
     
     func reset()
     {
@@ -44,14 +58,41 @@ public class SMTKView       : MTKView
     
     func update()
     {
-        renderer?.renderSample()
-        if drawables?.encodeStart(float4(0,0,0,1)) != nil {
-            
-            if let texture = model.renderer?.mainRenderKit.outputTexture {
-                drawables?.drawBox(position: float2(0,0), size: float2(Float(texture.width), Float(texture.height)), rounding: 0, borderSize: 0, onion: 0, fillColor: float4(0,0,0,1), borderColor: float4(0,0,0,0), texture: texture)
+        if mode == .Render3D {
+            renderer?.renderSample()
+            if drawables?.encodeStart(float4(0,0,0,1)) != nil {
+                
+                if let texture = model.renderer?.mainRenderKit.outputTexture {
+                    drawables?.drawBox(position: float2(0,0), size: float2(Float(texture.width), Float(texture.height)), rounding: 0, borderSize: 0, onion: 0, fillColor: float4(0,0,0,1), borderColor: float4(0,0,0,0), texture: texture)
+                }
+                
+                drawables?.encodeEnd()
             }
-            
-            drawables?.encodeEnd()
+        } else
+        if mode == .Points2D {
+            if drawables?.encodeStart(float4(0.1,0.1,0.1,1.0)) != nil {
+                
+                if let points = model.currProject?.points {
+                    
+                    for p in points.allObjects as! [Point] {
+                        
+                        let x = (p.x + 0.5) * Float(self.drawables!.metalView.bounds.width) - self.pointRadius
+                        let y = (1.0 - (p.y + 0.5)) * Float(self.drawables!.metalView.bounds.height) - self.pointRadius
+
+                        var borderSize : Float = 0.0
+                        
+                        if let currentPoint = currentPoint {
+                            if currentPoint.id == p.id {
+                                borderSize = 2.0
+                            }
+                        }
+                        
+                        drawables?.drawDisk(position: float2(x, y), radius: pointRadius, borderSize: borderSize, fillColor: float4(p.red, p.green, p.blue, 1.0), borderColor: float4(1, 1, 1, 1))
+                    }
+                }
+                
+                drawables?.encodeEnd()
+            }
         }
     }
     
@@ -61,7 +102,14 @@ public class SMTKView       : MTKView
     func platformInit(_ model: Model)
     {
         drawables = MetalDrawables(self)
-        model.setRenderView(self)
+        
+        if mode == .Render3D {
+            model.setRenderView(self)
+        } else
+        if mode == .Points2D {
+            model.setPointsView(self)
+        }
+
         self.model = model
 
         layer?.isOpaque = false
@@ -107,6 +155,44 @@ public class SMTKView       : MTKView
                 self.hasDoubleTap = false
             }
         }
+        
+        if mode == .Points2D {
+            print(mousePos.x, mousePos.y)
+            
+            if let points = model.currProject?.points {
+                
+                let points = points.allObjects as! [Point]
+                             
+                let s = pointRadius
+                let mx = mousePos.x
+                let my = mousePos.y
+                
+                var found = false
+                
+                for p in points {
+                    
+                    if axis == .XY {
+                        
+                        let x = (p.x + 0.5) * Float(self.drawables!.metalView.bounds.width)
+                        let y = (1.0 - (p.y + 0.5)) * Float(self.drawables!.metalView.bounds.height)
+
+                        if x >= mx - s && x < mx + s {
+                            if y >= my - s && y < my + s {
+                                model.pointChanged.send(p)
+                                self.currentPoint = p
+                                found = true
+                                break
+                            }
+                        }
+                    }
+                }
+                
+                if found == false {
+                    model.pointChanged.send(nil)
+                    self.currentPoint = nil
+                }
+            }
+        }
     }
     
     override public func mouseDragged(with event: NSEvent) {
@@ -134,7 +220,14 @@ public class SMTKView       : MTKView
     func platformInit(_ model: Model, command: SignedCommand? = nil)
     {
         drawables = MetalDrawables(self)
-        model.setRenderView(self)
+        
+        if mode == .Render3D {
+            model.setRenderView(self)
+        } else
+        if mode == .Points2D {
+            model.setPointsView(self)
+        }
+
         self.model = model
         
         let tapRecognizer = UITapGestureRecognizer(target: self, action:(#selector(self.handleTapGesture(_:))))
@@ -236,6 +329,8 @@ public class SMTKView       : MTKView
 struct RenderView: NSViewRepresentable {
 
     var model               : Model
+    var mode                : SMTKView.Mode
+    
     var trackingArea        : NSTrackingArea?
     
     func makeCoordinator() -> Coordinator {
@@ -256,6 +351,7 @@ struct RenderView: NSViewRepresentable {
         stkView.drawableSize = stkView.frame.size
         stkView.isPaused = false
         
+        stkView.mode = mode
         stkView.platformInit(model)
 
         return stkView
@@ -299,6 +395,8 @@ struct RenderView: UIViewRepresentable {
     typealias UIViewType = MTKView
 
     var model               : Model
+    var mode                : SMTKView.Mode
+    
     var command             : SignedCommand? = nil
 
     func makeCoordinator() -> Coordinator {
@@ -319,6 +417,7 @@ struct RenderView: UIViewRepresentable {
         stkView.drawableSize = stkView.frame.size
         stkView.isPaused = false
         
+        stkView.mode = mode
         stkView.platformInit(model, command: command)
 
         return stkView

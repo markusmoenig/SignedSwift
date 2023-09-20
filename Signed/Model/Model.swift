@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import SwiftUI
 
 class Model: NSObject, ObservableObject {
  
@@ -20,7 +21,8 @@ class Model: NSObject, ObservableObject {
     
     /// Reference to the current renderView
     var renderView                          : SMTKView!
-    
+    var pointsView                          : SMTKView!
+
     /// Reference to the renderer
     var renderer                            : RenderPipeline? = nil
     var modeler                             : ModelerPipeline? = nil
@@ -34,14 +36,19 @@ class Model: NSObject, ObservableObject {
     var progressTotal                       : Int32 = 0
     
     /// renderName (User setting)
-    var renderName                          = "renderPBR"
+    var renderName                          = "renderBSDF"
     var renderType                          : RenderType = .bsdf
     
     /// Current renderer
-    var currentRenderName                   = "renderPBR"
+    var currentRenderName                   = "renderBSDF"
     
     /// The project itself
     var project                             : SignedProject
+        
+    var currProject                         : Project? = nil
+
+    /// Send when the camera mode changed
+    let cameraModeChanged                   = PassthroughSubject<ModelerKit.Content, Never>()
     
     /// Update UIs
     let updateUI                            = PassthroughSubject<Void, Never>()
@@ -53,6 +60,15 @@ class Model: NSObject, ObservableObject {
     let modellingStarted                    = PassthroughSubject<Void, Never>()
     /// Send when modelling is finished
     let modellingEnded                      = PassthroughSubject<Void, Never>()
+    
+    /// The rpoject changed
+    let projectChanged                      = PassthroughSubject<Project?, Never>()
+    
+    /// Current point changed
+    let pointChanged                        = PassthroughSubject<Point?, Never>()
+    
+    /// UIs of the DataViews needs to be updated
+    let updateDataViews                     = PassthroughSubject<Void, Never>()
     
     //
     
@@ -68,7 +84,7 @@ class Model: NSObject, ObservableObject {
         self.project = project
     }
     
-    /// Sets the renderer
+    /// Sets the renderView
     func setRenderView(_ renderView: SMTKView)
     {
         self.renderView = renderView
@@ -79,11 +95,18 @@ class Model: NSObject, ObservableObject {
 //            self.renderer?.installNextShapeIconCmd(shapes.first)
         }
         renderView.renderer = renderer
-        
-        let cmd = SignedCommand("Sphere", role: .GeometryAndMaterial, action: .Add, primitive: .Sphere, data: ["Geometry": SignedData([SignedDataEntity("radius", Float(0.49), float2(0, 5), .Slider, .None, "Radius of the sphere.")])], material: SignedMaterial(albedo: float3(0.5,0.5,0.5)))
-
-//        let cmd = SignedCommand("Box", role: .GeometryAndMaterial, action: .Add, primitive: .Box, data: ["Geometry": SignedData([SignedDataEntity("size", float3(0.065,0.065,0.065) * 7, float2(0,10), .Slider, .None, "Size of the box."), SignedDataEntity("rounding", Float(0.01), float2(0,1), .Slider, .None, "Rounding of the box.")])], material: SignedMaterial(albedo: float3(0.5,0.5,0.5)))
+                
+        let cmd = SignedCommand("Sphere", role: .GeometryAndMaterial, action: .Add, primitive: .Sphere, data: ["Geometry": SignedData([SignedDataEntity("radius", Float(0.49), float2(0, 5), .Slider, .None, "Radius of the sphere.")])], material: SignedMaterial(albedo: float3(1.5,0.5,0.5), metallic: 1.0))
         modeler?.executeCommand(cmd)
+
+//        let cmd1 = SignedCommand("Box", role: .GeometryAndMaterial, action: .Add, primitive: .Box, data: ["Geometry": SignedData([SignedDataEntity("size", float3(0.99, 0.99, 0.99), float2(0,10), .Slider, .None, "Size of the box."), SignedDataEntity("rounding", Float(0.01), float2(0,1), .Slider, .None, "Rounding of the box.")])], material: SignedMaterial(albedo: float3(0.5,0.5,0.5), metallic: 1.0))
+//        modeler?.executeCommand(cmd1)
+    }
+    
+    /// Sets the pointRender View
+    func setPointsView(_ pointsView: SMTKView)
+    {
+        self.pointsView = pointsView
     }
 
     /// Gets the renderType for the given ModelerKit

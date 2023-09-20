@@ -178,85 +178,92 @@ class RenderPipeline
                 }
             }
         }
+                
+        #if os(iOS)
+        let iter = 2;
+        #else
+        let iter = 5;
+        #endif
         
-        startCompute()
-
-        if checkMainKitTextures() {
-            performRestart(true, clear: true)
-            needsRestart = false
-        } else
-        if needsRestart {
-            performRestart(true, clear: true)
-            needsRestart = false
-        }
-                                
-        if let mainKit = model.modeler?.mainKit, mainKit.renderGPUBusy == false {
-            
-            if let renderKit = mainKit.currentRenderKit {
-                if renderKit.samples < renderKit.maxSamples {
-                    
-                    mainKit.renderGPUBusy = true
-                    commandBuffer?.addCompletedHandler { cb in
-                        mainKit.renderGPUBusy = false
-                        print("Rendering Time:", (cb.gpuEndTime - cb.gpuStartTime) * 1000, renderKit.samples, renderKit.maxSamples)
-                    }
-                    
-                    runRender(mainKit)
-                    accumulate(renderKit: renderKit)
-                    renderKit.samples += 1
-                    
-                    //if model.getRenderType(kit: mainKit) == .bsdf {
-                        if model.progress == .rendering {
-                            model.progressCurrent += 1
-                            model.progressChanged.send()
-                        }
-                    //}
-                } else {
-                    
-                    model.progress = .none
-                    model.progressCurrent = 0
-                    model.progressTotal = 0
-                    
-                    self.model.progressChanged.send()
-                    
-                    /*
-                    let wasIcon = mainKit.installNextRenderKit()
-                    if wasIcon && mainKit.content == .object && mainKit.currentRenderKit == nil {
-                        if let objectEntity = mainKit.objectEntity {
-                            if let image = model.modeler!.kitToImage(renderKit: iconRenderKit) {
-                                objectEntity.icon = model.modeler!.cgiImageToData(image: image)
-                                model.iconFinished.send(objectEntity.id!)
-                                mainKit.objectEntity = nil
-                                
-                                // Save the icon in DB
-                                let managedObjectContext = PersistenceController.shared.container.viewContext
-                                do {
-                                    try managedObjectContext.save()
-                                } catch {}
-                            }
-                        }
-                    } else
-                    if wasIcon && mainKit.content == .material && mainKit.currentRenderKit == nil {
-                        if let materialEntity = mainKit.materialEntity {
-                            if let image = model.modeler!.kitToImage(renderKit: iconRenderKit) {
-                                materialEntity.icon = model.modeler!.cgiImageToData(image: image)
-                                model.iconFinished.send(materialEntity.id!)
-                                mainKit.materialEntity = nil
-                                
-                                // Save the icon in DB
-                                let managedObjectContext = PersistenceController.shared.container.viewContext
-                                do {
-                                    try managedObjectContext.save()
-                                } catch {}
-                            }
-                        }
-                    }*/
+        for i in 0..<iter {
+            startCompute()
+            if i == 0 {
+                if checkMainKitTextures() {
+                    performRestart(true, clear: true)
+                    needsRestart = false
+                } else
+                if needsRestart {
+                    performRestart(true, clear: true)
+                    needsRestart = false
                 }
             }
+            if let mainKit = model.modeler?.mainKit, mainKit.renderGPUBusy == false {
+                
+                if let renderKit = mainKit.currentRenderKit {
+                    if renderKit.samples < renderKit.maxSamples {
+                        
+                        mainKit.renderGPUBusy = true
+                        commandBuffer?.addCompletedHandler { cb in
+                            mainKit.renderGPUBusy = false
+                            //print("Rendering Time:", (cb.gpuEndTime - cb.gpuStartTime) * 1000, renderKit.samples, renderKit.maxSamples)
+                        }
+                        
+                        runRender(mainKit)
+                        accumulate(renderKit: renderKit)
+                        renderKit.samples += 1
+                        
+                        if model.getRenderType(kit: mainKit) == .bsdf {
+                            if model.progress == .rendering {
+                                model.progressCurrent += 1
+                                model.progressChanged.send()
+                            }
+                        }
+                    } else {
+                        
+                        model.progress = .none
+                        model.progressCurrent = 0
+                        model.progressTotal = 0
+                        
+                        self.model.progressChanged.send()
+                        
+                        /*
+                         let wasIcon = mainKit.installNextRenderKit()
+                         if wasIcon && mainKit.content == .object && mainKit.currentRenderKit == nil {
+                         if let objectEntity = mainKit.objectEntity {
+                         if let image = model.modeler!.kitToImage(renderKit: iconRenderKit) {
+                         objectEntity.icon = model.modeler!.cgiImageToData(image: image)
+                         model.iconFinished.send(objectEntity.id!)
+                         mainKit.objectEntity = nil
+                         
+                         // Save the icon in DB
+                         let managedObjectContext = PersistenceController.shared.container.viewContext
+                         do {
+                         try managedObjectContext.save()
+                         } catch {}
+                         }
+                         }
+                         } else
+                         if wasIcon && mainKit.content == .material && mainKit.currentRenderKit == nil {
+                         if let materialEntity = mainKit.materialEntity {
+                         if let image = model.modeler!.kitToImage(renderKit: iconRenderKit) {
+                         materialEntity.icon = model.modeler!.cgiImageToData(image: image)
+                         model.iconFinished.send(materialEntity.id!)
+                         mainKit.materialEntity = nil
+                         
+                         // Save the icon in DB
+                         let managedObjectContext = PersistenceController.shared.container.viewContext
+                         do {
+                         try managedObjectContext.save()
+                         } catch {}
+                         }
+                         }
+                         }*/
+                    }
+                }
+            }
+            stopCompute(waitUntilCompleted: true)
         }
-        
-        stopCompute()//waitUntilCompleted: true)
-        
+                
         // Render a shape icon sample ? These icons don't use Lua or public modules and are just based on their single SignedCommand
         
         if let icon = iconQueue.first {
@@ -424,29 +431,29 @@ class RenderPipeline
             renderUniform.scale = kit.scale
             
             renderUniform.maxDepth = 6;
-            renderUniform.backgroundColor = float4(0.25, 0.25, 0.25, 1)
+            renderUniform.backgroundColor = float4(0.15, 0.15, 0.15, 1)
 
             renderUniform.showBBox = 0
 
-            if kit.content == .project {
-                if let rendererData = model.project.dataGroups.getGroup("Renderer") {
-                    renderUniform.backgroundColor = rendererData.getFloat4("Background")
-                    renderUniform.maxDepth = Int32(rendererData.getInt("Reflections", 6))
-                    renderUniform.showBBox = rendererData.getBool("Bounding Box", false) ? 1 : 0
-                }
-            } else {
-                if let rendererData = model.project.dataGroups.getGroup("Renderer") {
-                    renderUniform.showBBox = rendererData.getBool("Bounding Box", false) ? 1 : 0
-                }
-            }
+//            if kit.content == .project {
+//                if let rendererData = model.project.dataGroups.getGroup("Renderer") {
+//                    renderUniform.backgroundColor = rendererData.getFloat4("Background")
+//                    renderUniform.maxDepth = Int32(rendererData.getInt("Reflections", 6))
+//                    renderUniform.showBBox = rendererData.getBool("Bounding Box", false) ? 1 : 0
+//                }
+//            } else {
+//                if let rendererData = model.project.dataGroups.getGroup("Renderer") {
+//                    renderUniform.showBBox = rendererData.getBool("Bounding Box", false) ? 1 : 0
+//                }
+//            }
+//
             
-            /*
-            renderUniform.lights.0.position = float3(0,1,0)
+            renderUniform.lights.0.position = float3(-2,2,0)
             renderUniform.lights.0.emission = float3(10,10,10)
             renderUniform.lights.0.params.x = 1
             renderUniform.lights.0.params.y = 4.0 * Float.pi * 1 * 1;//light.radius * light.radius;
             renderUniform.lights.0.params.z = 1
-             */
+            /* */
             /*
             type Quad
             position -2.04973 5 -8
@@ -470,18 +477,18 @@ class RenderPipeline
             renderUniform.lights.0.params.z = 0 */
             
             renderUniform.numOfLights = 1
-            renderUniform.lights.0.params.z = 2
-
-            if kit.content == .project {
-                if let sunData = model.project.dataGroups.getGroup("Sun") {
-                    renderUniform.lights.0.position = sunData.getFloat3("Sun Position", float3(0, 100, -100))
-                    renderUniform.lights.0.emission = sunData.getFloat3("Sun Emission", float3(4, 4, 4))
-                }
-            } else {
-                renderUniform.lights.0.position = float3(0, 100, -100)
-                renderUniform.lights.0.emission = float3(4, 4, 4)
-                renderUniform.noShadows = 1;
-            }
+//            renderUniform.lights.0.params.z = 2
+//
+//            if kit.content == .project {
+//                if let sunData = model.project.dataGroups.getGroup("Sun") {
+//                    renderUniform.lights.0.position = sunData.getFloat3("Sun Position", float3(0, 100, -100))
+//                    renderUniform.lights.0.emission = sunData.getFloat3("Sun Emission", float3(4, 4, 4))
+//                }
+//            } else {
+//                renderUniform.lights.0.position = float3(0, 100, -100)
+//                renderUniform.lights.0.emission = float3(4, 4, 4)
+//                renderUniform.noShadows = 1;
+//            }
         } else {
             
             renderUniform.randomVector = float3(Float.random(in: 0...1), Float.random(in: 0...1), Float.random(in: 0...1))
@@ -656,8 +663,8 @@ class RenderPipeline
     func calculateThreadGroups(_ state: MTLComputePipelineState, _ encoder: MTLComputeCommandEncoder,_ texture: MTLTexture)
     {
         
-        let w = state.threadExecutionWidth//limitThreads ? 1 : state.threadExecutionWidth
-        let h = state.maxTotalThreadsPerThreadgroup / w//limitThreads ? 1 : state.maxTotalThreadsPerThreadgroup / w
+        let w = 1;//state.threadExecutionWidth//limitThreads ? 1 : state.threadExecutionWidth
+        let h = 1;//state.maxTotalThreadsPerThreadgroup / w//limitThreads ? 1 : state.maxTotalThreadsPerThreadgroup / w
         let d = 1//
         let threadsPerThreadgroup = MTLSizeMake(w, h, d)
         
