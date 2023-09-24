@@ -132,7 +132,6 @@ class Model: NSObject, ObservableObject {
                     //cmd.material.albedo = float3(p.red, p.green, p.blue)
                     modeler?.executeCommand(cmd: cmd, id: id)
                     pointMap[id] = p.id
-                    id += 0.01
                 }
                 
                 if project.showShapes {
@@ -149,12 +148,20 @@ class Model: NSObject, ObservableObject {
                             modeler?.executeCommand(cmd: cmd, id: 0)
                         }
                         
+                        cmd.material.data.set("color", float3(shape.material!.red, shape.material!.green, shape.material!.blue))
+                        
+                        cmd.material.data.set("roughness", shape.material!.roughness)
+                        cmd.material.data.set("metallic", shape.material!.metallic)
+                        
                         if let data = cmd.dataGroups.getGroup("Modifier") {
                             data.set("noise", shape.noise)
-                            modeler?.executeCommand(cmd: cmd, id: 0)
+                            modeler?.executeCommand(cmd: cmd, id: id)
                         }
+
                     }
                 }
+                
+                id += 0.01
             }
         }
         

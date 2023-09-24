@@ -26,6 +26,8 @@ struct ShapeView: View {
     @State var radiusValue                  : Float = 0
     @State var radiusValueText              : String = ""
     
+    @State private var materialPopover      : Bool = false
+
     @State var noiseValue                   : Float = 0
     @State var noiseValueText               : String = ""
     
@@ -41,9 +43,11 @@ struct ShapeView: View {
         shapeName = shape.shapeName!
         
         if shape.shapeName == "Sphere" {
+            self._radiusValue = State(initialValue: shape.radius)
             self._radiusValueText = State(initialValue: String(format: "%.02f", shape.radius))
         }
         
+        self._noiseValue = State(initialValue: shape.noise)
         self._noiseValueText = State(initialValue: String(format: "%.02f", shape.noise))
     }
     
@@ -89,6 +93,19 @@ struct ShapeView: View {
                 Text(radiusValueText)
                     .frame(maxWidth: 40)
             }
+        }
+        
+        Button(action: {
+            materialPopover = true
+        }) {
+            Text("Material")
+        }
+        .popover(isPresented: self.$materialPopover,
+                 arrowEdge: .leading
+        ) {
+            VStack(alignment: .leading) {
+                MaterialView(model: model, project: project, point: point, shape: shape)
+            }.padding()
         }
         
         //Section(header: Text("Modifier")) {

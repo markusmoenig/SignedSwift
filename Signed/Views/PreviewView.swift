@@ -158,7 +158,7 @@ struct PreviewView: View {
                         .frame(width: 100)
                         .menuStyle(BorderlessButtonMenuStyle())
                         
-                        // Edit Node name
+                        // Rename point
                         .popover(isPresented: self.$renamePointPopover,
                                  arrowEdge: .top
                         ) {
