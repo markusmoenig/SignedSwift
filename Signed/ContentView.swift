@@ -53,8 +53,11 @@ struct ContentView: View {
         }
         .onReceive(model.projectChanged) { project in
             model.currProject = project
-            //if let renderView = model.renderView {
-            //}
+            model.build()
+        }
+        .onReceive(model.rebuild) { _ in
+            model.build()
+            model.renderer?.restart()
         }
     }
 
@@ -64,6 +67,9 @@ struct ContentView: View {
             let newProject = Project(context: viewContext)
             newProject.name = "New Project"
             newProject.id = UUID()
+            newProject.showPoints = true
+            newProject.showShapes = true
+            newProject.render = false
 
             do {
                 try viewContext.save()

@@ -21,6 +21,12 @@ struct PreviewView: View {
 
     @ObservedObject var project                         : Project
     
+    @State var selectedPoint                            : Point? = nil
+    @State var selectedShape                            : Shape? = nil
+    
+    @State private var renamePointPopover               : Bool = false
+    @State private var pointName                        : String = ""
+
     @State var cameraMode                               : ModelerKit.Content = .project
     @State var selection                                : SignedObject? = nil
     
@@ -47,8 +53,8 @@ struct PreviewView: View {
     
     var body: some View {
         
-        HStack(alignment: .top, spacing: 0) {
-            
+        HStack(alignment: .top, spacing: 4) {
+
             GeometryReader { geometry in
                 
                 ZStack(alignment: .bottomLeading) {
@@ -58,73 +64,118 @@ struct PreviewView: View {
                     //.animation(.default)
                         .allowsHitTesting(true)
                     
-                    Menu {
-                        
-                        Button("Set Custom", action: {
-                            
-                            print(project)
-                            
-                            if let mainRenderKit = model.renderer?.mainRenderKit {
-                                let width = mainRenderKit.sampleTexture!.width
-                                let height = mainRenderKit.sampleTexture!.height
-                                
-                                model.renderSize = SIMD2<Int>(width, height)
-                                customResWidth = String(width)
-                                customResHeight = String(height)
-                            }
-                            
-                            showCustomResPopover = true
-                        })
-                        
-                        Button("Clear Custom", action: {
-                            model.renderSize = nil
-                            model.renderer?.restart()
-                        })
-                        
-                        Divider()
-                        
-                        Button("Export Image...", action: {
-                            exportingImage = true
-                        })
-                    }
-                label: {
-                    Text(resolutionText)
-                }
-                .padding(.trailing, 6)
-                .padding(.leading, 10)
-                .padding(.bottom, geometry.size.height - 25)
-                .frame(width: 100)
-                    
-                .menuStyle(BorderlessButtonMenuStyle())
-                    
-                    // Custom Resolution Popover
-                .popover(isPresented: self.$showCustomResPopover,
-                         arrowEdge: .top
-                ) {
-                    VStack(alignment: .leading) {
-                        Text("Resolution:")
-                        TextField("Width", text: $customResWidth, onEditingChanged: { (changed) in
-                        })
-                        TextField("Height", text: $customResHeight, onEditingChanged: { (changed) in
-                        })
-                        
-                        Button(action: {
-                            if let width = Int(customResWidth), width > 0 {
-                                if let height = Int(customResHeight), height > 0 {
+                    if project.render == true {
+                        Menu {
+                            Button("Set Custom", action: {
+                                                                
+                                if let mainRenderKit = model.renderer?.mainRenderKit {
+                                    let width = mainRenderKit.sampleTexture!.width
+                                    let height = mainRenderKit.sampleTexture!.height
+                                    
                                     model.renderSize = SIMD2<Int>(width, height)
-                                    model.renderer?.restart()
+                                    customResWidth = String(width)
+                                    customResHeight = String(height)
                                 }
-                            }
-                        })
-                        {
-                            Text("Apply")
+                                
+                                showCustomResPopover = true
+                            })
+                            
+                            Button("Clear Custom", action: {
+                                model.renderSize = nil
+                                model.renderer?.restart()
+                            })
+                            
+                            Divider()
+                            
+                            Button("Export Image...", action: {
+                                exportingImage = true
+                            })
                         }
-                        .foregroundColor(Color.accentColor)
-                        .padding(4)
+                        label: {
+                            Text(resolutionText)
+                        }
+                        .padding(.trailing, 6)
                         .padding(.leading, 10)
-                        .frame(minWidth: 200)
-                    }.padding()
-                }
+                        .padding(.bottom, geometry.size.height - 25)
+                        .frame(width: 100)
+                        .menuStyle(BorderlessButtonMenuStyle())
+                            
+                            // Custom Resolution Popover
+                        .popover(isPresented: self.$showCustomResPopover,
+                                 arrowEdge: .top
+                        ) {
+                            VStack(alignment: .leading) {
+                                Text("Resolution:")
+                                TextField("Width", text: $customResWidth, onEditingChanged: { (changed) in
+                                })
+                                TextField("Height", text: $customResHeight, onEditingChanged: { (changed) in
+                                })
+                                
+                                Button(action: {
+                                    if let width = Int(customResWidth), width > 0 {
+                                        if let height = Int(customResHeight), height > 0 {
+                                            model.renderSize = SIMD2<Int>(width, height)
+                                            model.renderer?.restart()
+                                        }
+                                    }
+                                })
+                                {
+                                    Text("Apply")
+                                }
+                                .foregroundColor(Color.accentColor)
+                                .padding(4)
+                                .padding(.leading, 10)
+                                .frame(minWidth: 200)
+                            }.padding()
+                        }
+                    } else 
+                    if let point = selectedPoint {
+                        Menu {
+                            Button("Rename", action: {
+                                renamePointPopover = true
+                                pointName = point.name!
+                            })
+                            
+                            Button("Delete", action: {
+                                viewContext.delete(point)
+                                model.pointChanged.send(nil)
+                                save("Cannot delete point")
+                                model.build()
+                            })
+                            
+//                            Divider()
+//                            
+//                            Button("Export Image...", action: {
+//                                exportingImage = true
+//                            })
+                        }
+                        label: {
+                            Text(point.name!)
+                        }
+                        .padding(.trailing, 6)
+                        .padding(.leading, 10)
+                        .padding(.bottom, geometry.size.height - 25)
+                        .frame(width: 100)
+                        .menuStyle(BorderlessButtonMenuStyle())
+                        
+                        // Edit Node name
+                        .popover(isPresented: self.$renamePointPopover,
+                                 arrowEdge: .top
+                        ) {
+                            VStack(alignment: .leading) {
+                                if let point = selectedPoint {
+                                    Text("Name:")
+                                    TextField("Name", text: $pointName, onEditingChanged: { (changed) in
+                                        point.name = pointName
+                                        model.pointChanged.send(nil)
+                                        model.pointChanged.send(point)
+                                        save("Cannot rename Point")
+                                    })
+                                    .frame(minWidth: 200)
+                                }
+                            }.padding()
+                        }
+                    }
                     
                     // Camera Controls
                     
@@ -162,7 +213,6 @@ struct PreviewView: View {
                                     
                                     camera.rotateDelta(delta * 0.01)
                                     model.renderer?.restart()
-                                    model.updateDataViews.send()
                                 })
                                 .onEnded({ info in
                                     isOrbiting = false
@@ -204,7 +254,6 @@ struct PreviewView: View {
                                     
                                     camera.moveDelta(delta * 0.003, aspect: getAspectRatio())
                                     model.renderer?.restart()
-                                    model.updateDataViews.send()
                                 })
                                 .onEnded({ info in
                                     isMoving = false
@@ -247,7 +296,6 @@ struct PreviewView: View {
                                 
                                 camera.zoomDelta(delta.x * 0.04)
                                 model.renderer?.restart()
-                                model.updateDataViews.send()
                             })
                             .onEnded({ info in
                                 isZooming = false
@@ -279,7 +327,7 @@ struct PreviewView: View {
              // Handle failure.
              }
              }*/
-        
+            
             
             .onReceive(self.model.updateUI) { _ in
                 resolutionText = computeResolutionText()
@@ -294,6 +342,10 @@ struct PreviewView: View {
                 model.projectChanged.send(project)
             }
             
+            .onReceive(self.model.pointChanged) { point in
+                self.selectedPoint = point
+            }
+
             Sidebar(model: model, project: project)
                 .frame(width: 300)
         }
@@ -329,6 +381,16 @@ struct PreviewView: View {
             return model.project.materialCamera
         } else {
             return model.project.camera
+        }
+    }
+    
+    /// Save the context
+    func save(_ text: String) {
+        do {
+            try viewContext.save()
+        } catch {
+            let nsError = error as NSError
+            print(text, nsError)
         }
     }
 }

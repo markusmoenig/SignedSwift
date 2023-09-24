@@ -150,14 +150,14 @@ class RenderPipeline
         if let mainKit = model.modeler?.mainKit {
             if mainKit.pipeline.isEmpty == false {
                 if mainKit.modelGPUBusy == false {
-                    model.modeler?.executeNext(kit: mainKit)
+                    model.modeler?.executeNext(kit: mainKit, id: 0)
                     if mainKit.pipeline.isEmpty {
                         model.currentRenderName = model.getRenderName(kit: model.modeler!.mainKit)
                         needsRestart = true
                         
                         model.progress = .rendering
                         model.progressCurrent = 0
-                        if model.getRenderType(kit: model.modeler!.mainKit) == .bsdf {
+                        if model.currProject?.render == true {
                             model.progressTotal = mainRenderKit.maxSamples
                         } else {
                             model.progressTotal = 40
@@ -349,7 +349,7 @@ class RenderPipeline
             
             var renderName = kit.renderName
             if kit.role == .main {
-                renderName = model.currentRenderName
+                renderName = model.currProject?.render == true ? "renderBSDF" : "renderPBR"
             }
             
             if kit.content == .material {
@@ -663,9 +663,9 @@ class RenderPipeline
     func calculateThreadGroups(_ state: MTLComputePipelineState, _ encoder: MTLComputeCommandEncoder,_ texture: MTLTexture)
     {
         
-        let w = 1;//state.threadExecutionWidth//limitThreads ? 1 : state.threadExecutionWidth
-        let h = 1;//state.maxTotalThreadsPerThreadgroup / w//limitThreads ? 1 : state.maxTotalThreadsPerThreadgroup / w
-        let d = 1//
+        let w = 1
+        let h = 1
+        let d = 1
         let threadsPerThreadgroup = MTLSizeMake(w, h, d)
         
         let threadgroupsPerGrid = MTLSize(width: (texture.width + w - 1) / w, height: (texture.height + h - 1) / h, depth: (texture.depth + d - 1) / d)

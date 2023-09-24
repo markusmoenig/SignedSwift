@@ -40,7 +40,7 @@ class Model: NSObject, ObservableObject {
     var renderType                          : RenderType = .bsdf
     
     /// Current renderer
-    var currentRenderName                   = "renderBSDF"
+    var currentRenderName                   = "renderPBR"
     
     /// The project itself
     var project                             : SignedProject
@@ -67,13 +67,16 @@ class Model: NSObject, ObservableObject {
     /// Current point changed
     let pointChanged                        = PassthroughSubject<Point?, Never>()
     
-    /// UIs of the DataViews needs to be updated
-    let updateDataViews                     = PassthroughSubject<Void, Never>()
+    /// Project needs to rebuild
+    let rebuild                             = PassthroughSubject<Void, Never>()
     
     //
     
     /// Custom render size
     var renderSize                          : SIMD2<Int>? = nil
+    
+    /// Maps point ids in the model texture to the points uuids
+    var pointMap                            : [Float: UUID] = [:]
     
     override init() {
         project = SignedProject()
@@ -96,16 +99,70 @@ class Model: NSObject, ObservableObject {
         }
         renderView.renderer = renderer
                 
-        let cmd = SignedCommand("Sphere", role: .GeometryAndMaterial, action: .Add, primitive: .Sphere, data: ["Geometry": SignedData([SignedDataEntity("radius", Float(0.49), float2(0, 5), .Slider, .None, "Radius of the sphere.")])], material: SignedMaterial(albedo: float3(1.5,0.5,0.5), metallic: 1.0))
-        modeler?.executeCommand(cmd)
+//        let cmd = SignedCommand("Sphere", role: .GeometryAndMaterial, action: .Add, primitive: .Sphere, data: ["Geometry": SignedData([SignedDataEntity("radius", Float(0.49), float2(0, 5), .Slider, .None, "Radius of the sphere.")])], material: SignedMaterial(albedo: float3(1.5,0.5,0.5), metallic: 1.0))
+//        modeler?.executeCommand(cmd: cmd, id: 0)
 
 //        let cmd1 = SignedCommand("Box", role: .GeometryAndMaterial, action: .Add, primitive: .Box, data: ["Geometry": SignedData([SignedDataEntity("size", float3(0.99, 0.99, 0.99), float2(0,10), .Slider, .None, "Size of the box."), SignedDataEntity("rounding", Float(0.01), float2(0,1), .Slider, .None, "Rounding of the box.")])], material: SignedMaterial(albedo: float3(0.5,0.5,0.5), metallic: 1.0))
 //        modeler?.executeCommand(cmd1)
     }
     
+    /// Build the project, i.e. model the project state
+    func build() {
+        
+        var id : Float = 0.01
+        pointMap = [:]
+        
+        modeler?.clear()
+        if let project = currProject {
+            for p in project.points?.allObjects as! [Point] {
+                
+                if project.showPoints {
+                    let cmd = SignedCommand("Sphere", role: .GeometryAndMaterial, action: .Add, primitive: .Sphere)
+                    
+                    if let data = cmd.dataGroups.getGroup("Transform") {
+                        data.set("position", float3(p.x, p.y, p.z))
+                    }
+                    
+                    if let data = cmd.dataGroups.getGroup("Geometry") {
+                        data.set("radius", 1.0 / 50.0)
+                    }
+                    
+                    cmd.material.data.set("color", float3(p.red, p.green, p.blue))
+                    cmd.material.data.set("roughness", 0.5)
+                    //cmd.material.albedo = float3(p.red, p.green, p.blue)
+                    modeler?.executeCommand(cmd: cmd, id: id)
+                    pointMap[id] = p.id
+                    id += 0.01
+                }
+                
+                if project.showShapes {
+                    for shape in p.shapes?.allObjects as! [Shape] {
+                        
+                        let cmd = SignedCommand("Sphere", role: .GeometryAndMaterial, action: .Add, primitive: .Sphere)
+                        
+                        if let data = cmd.dataGroups.getGroup("Transform") {
+                            data.set("position", float3(p.x, p.y, p.z))
+                        }
+                        
+                        if let data = cmd.dataGroups.getGroup("Geometry") {
+                            data.set("radius", shape.radius)
+                            modeler?.executeCommand(cmd: cmd, id: 0)
+                        }
+                        
+                        if let data = cmd.dataGroups.getGroup("Modifier") {
+                            data.set("noise", shape.noise)
+                            modeler?.executeCommand(cmd: cmd, id: 0)
+                        }
+                    }
+                }
+            }
+        }
+        
+        renderer?.restart()
+    }
+    
     /// Sets the pointRender View
-    func setPointsView(_ pointsView: SMTKView)
-    {
+    func setPointsView(_ pointsView: SMTKView) {
         self.pointsView = pointsView
     }
 

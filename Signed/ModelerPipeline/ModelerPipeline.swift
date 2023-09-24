@@ -117,22 +117,22 @@ class ModelerPipeline
     }
     
     /// Executes the next command in the pipeline of the kit
-    func executeNext(kit: ModelerKit)
+    func executeNext(kit: ModelerKit, id: Float)
     {
         if kit.pipeline.isEmpty { return }
         
-        executeCommand(kit.pipeline.removeFirst(), kit)
+        executeCommand(cmd: kit.pipeline.removeFirst(), id: id, kit)
     }
     
     /// Executes a single command
-    func executeCommand(_ cmd: SignedCommand,_ modelerKit: ModelerKit? = nil, clearFirst: Bool = false)
+    func executeCommand(cmd: SignedCommand, id: Float, _ modelerKit: ModelerKit? = nil, clearFirst: Bool = false)
     {
         let kitToUse : ModelerKit? = modelerKit == nil ? mainKit : modelerKit
         
         if clearFirst {
             clear(kitToUse)
         }
-        
+                
         if let kit = kitToUse, kit.isValid() {
             
             if cmd.action == .Clear {
@@ -153,7 +153,7 @@ class ModelerPipeline
                 
                     computeEncoder.setComputePipelineState( state )
                     
-                    var modelerUniform = createModelerUniform(cmd, kit: kit)
+                    var modelerUniform = createModelerUniform(cmd: cmd, id: id, kit: kit)
                     computeEncoder.setBytes(&modelerUniform, length: MemoryLayout<ModelerUniform>.stride, index: 0)
                     
                     computeEncoder.setTexture(kit.modelTexture!, index: 1 )
@@ -183,13 +183,15 @@ class ModelerPipeline
     }
     
     /// Creates the uniform
-    func createModelerUniform(_ cmd: SignedCommand, kit: ModelerKit, forPreview: Bool = false) -> ModelerUniform
+    func createModelerUniform(cmd: SignedCommand, id: Float, kit: ModelerKit, forPreview: Bool = false) -> ModelerUniform
     {
         var modelerUniform = ModelerUniform()
                 
         modelerUniform.roleType = cmd.role.rawValue
         modelerUniform.actionType = cmd.action.rawValue
         modelerUniform.primitiveType = cmd.primitive.rawValue
+        
+        modelerUniform.id = id
         
         let scale = kit.scale
         
@@ -242,9 +244,8 @@ class ModelerPipeline
                 modelerUniform.depth = modifierData.getFloat2("depth", float2(-5, 5))
             }
         }
-        
-        modelerUniform.material = cmd.material.toMaterialStruct()
-        
+
+        modelerUniform.material = cmd.material.toMaterialStruct()        
         modelerUniform.blendMode = cmd.blendMode.rawValue
         
         modelerUniform.blendLinearValue = cmd.blendOptions.getFloat("value", 1)
@@ -252,9 +253,7 @@ class ModelerPipeline
         modelerUniform.blendOffset = cmd.blendOptions.getFloat3("offset", float3(0,0,0))
         modelerUniform.blendFrequency = cmd.blendOptions.getFloat("frequency", 1)
         modelerUniform.blendSmoothing = cmd.blendOptions.getFloat("smoothing", 5)
-        
-        modelerUniform.id = Int32(cmd.materialId)
-
+                
         return modelerUniform
     }
     
@@ -480,9 +479,9 @@ class ModelerPipeline
     func calculateThreadGroups(_ state: MTLComputePipelineState, _ encoder: MTLComputeCommandEncoder,_ texture: MTLTexture)
     {
         
-        let w = 1//state.threadExecutionWidth//limitThreads ? 1 : state.threadExecutionWidth
-        let h = 1//state.maxTotalThreadsPerThreadgroup / w//limitThreads ? 1 : state.maxTotalThreadsPerThreadgroup / w
-        let d = 1//
+        let w = 1
+        let h = 1
+        let d = 1
         let threadsPerThreadgroup = MTLSizeMake(w, h, d)
         
         let threadgroupsPerGrid = MTLSize(width: (texture.width + w - 1) / w, height: (texture.height + h - 1) / h, depth: (texture.depth + d - 1) / d)

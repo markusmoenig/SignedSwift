@@ -156,6 +156,30 @@ public class SMTKView       : MTKView
             }
         }
         
+        let size = float2(Float(frame.width), Float(frame.height))
+        if let rc = model.modeler?.getSceneHit(mousePos / size, size) {
+            let id = rc.2
+            
+            for (i, uuid) in model.pointMap {
+                if id > i - 0.005 && id < i + 0.005 {
+                    if let project = model.currProject {
+                        for p in project.points?.allObjects as! [Point] {
+                            if p.id == uuid {
+                                model.pointChanged.send(p)
+                                break
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        /*
+        if mode == .Render3D {
+            let size = float2(Float(frame.width), Float(frame.height))
+            let rc = model.modeler?.getSceneHit(mousePos / size, size)
+            print(rc)
+        } else
         if mode == .Points2D {
             print(mousePos.x, mousePos.y)
             
@@ -192,7 +216,7 @@ public class SMTKView       : MTKView
                     self.currentPoint = nil
                 }
             }
-        }
+        }*/
     }
     
     override public func mouseDragged(with event: NSEvent) {
@@ -254,6 +278,24 @@ public class SMTKView       : MTKView
             hasDoubleTap = true
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0 / 60.0) {
                 self.hasDoubleTap = false
+            }
+        }
+        
+        let size = float2(Float(frame.width), Float(frame.height))
+        if let rc = model.modeler?.getSceneHit(mousePos / size, size) {
+            let id = rc.2
+            
+            for (i, uuid) in model.pointMap {
+                if id > i - 0.005 && id < i + 0.005 {
+                    if let project = model.currProject {
+                        for p in project.points?.allObjects as! [Point] {
+                            if p.id == uuid {
+                                model.pointChanged.send(p)
+                                break
+                            }
+                        }
+                    }
+                }
             }
         }
     }

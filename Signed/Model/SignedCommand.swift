@@ -38,15 +38,14 @@ class SignedCommand : Codable, Hashable {
     var blendMode       : BlendMode = .Linear
     var blendOptions    = SignedData([])
 
+    //
+    
     var dataGroups      : SignedDataGroups
     var material        : SignedMaterial
 
     var normal          : float3 = float3()
 
     var code            : String = ""
-
-    // To identify the editor session
-    var scriptContext   = ""
     
     /// The materialId for this cmd
     var materialId      : Int = 0
@@ -152,6 +151,9 @@ class SignedCommand : Codable, Hashable {
             SignedDataEntity("distance", Float(0.1), float2(0, 5), .Numeric, .None, "The distance between instances."),
             SignedDataEntity("upperLimit", float3(0,0,0), float2(-1000, 1000), .Numeric, .None, "The amount of repetitions in the positive axis directions."),
             SignedDataEntity("lowerLimit", float3(0,0,0), float2(-1000, 1000), .Numeric, .None, "The amount of repetitions in the negative axis directions."),
+        ])
+        
+        addDataGroup(name: "Geometry", entities: [
         ])
     }
     

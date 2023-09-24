@@ -1063,8 +1063,10 @@ kernel void renderBSDF(        constant RenderUniform               &renderData 
                     
             //float outside = 1.0;
 
-            if (depth == 0)
+            if (depth == 0) {
                 t = max(bbox.x, 0.000);
+                didHitBBox = true;
+            }
             else {
                 t = 0.000;
                 //outside = dot(state.normal, state.ffnormal) > 0.0 ? 1.0 : -1.0;
@@ -1072,7 +1074,6 @@ kernel void renderBSDF(        constant RenderUniform               &renderData 
             
             bool hit = false;
             bool needsNormal = true;
-            float bd = INFINITY;
             
             // Check for border hit
             float3 p = ray.origin + ray.direction * t;
@@ -1089,16 +1090,16 @@ kernel void renderBSDF(        constant RenderUniform               &renderData 
                     
                     // --- Visual Bounding Box, only test on the first pass
                     
-                    if (renderData.showBBox == 1 && i == 0) {
-                        bd = sdBoxFrame(p, float(r), 0.004);
-                        d = min(d, bd);
-                    }
+//                    if (renderData.showBBox == 1 && i == 0) {
+//                        bd = sdBoxFrame(p, float(r), 0.004);
+//                        d = min(d, bd);
+//                    }
                     
                     // ---
 
                     if (abs(d) < (0.0001*t*scale)) {
                         hit = true;
-                        if (didHitBBox && i == 0 && d == bd) didHitBBox = true;
+//                        if (didHitBBox && i == 0 && d == bd) didHitBBox = true;
                         break;
                     }
                     
@@ -1121,25 +1122,6 @@ kernel void renderBSDF(        constant RenderUniform               &renderData 
                 t = INFINITY;
             }
         }
-        
-        /*
-        bool hitPlane = false;
-        {
-            float3 normal = float3(0.0, 1.0, 0.0);
-            float denom = dot(normal, ray.direction);
-
-            if (abs(denom) > 0.0001) {
-                float dist = dot(float3(0.0, -0.5, 0.0) - ray.origin, normal) / denom;
-                if (dist >= 0.0 && t > dist) {
-                    t = dist;
-                    state.fhp = ray.origin + ray.direction * t;
-                    state.normal = normal;
-                    state.ffnormal = dot(state.normal, ray.direction) <= 0.0 ? state.normal : state.normal * -1.0;
-                    hitPlane = true;
-                }
-            }
-        }*/
-        
         
         // Lights
         /*
@@ -1190,10 +1172,10 @@ kernel void renderBSDF(        constant RenderUniform               &renderData 
         }*/
         
         if (t == INFINITY) {
-            if (true)
+            if (true) {
                 radiance += pow(renderData.backgroundColor.xyz, 2.2) * throughput;
-//                radiance += renderData.backgroundColor.xyz;
-            else {
+                if (didHitBBox) radiance += float3(0.01, 0.01, 0.01);
+            } else {
                 float cSize = 2;
                 
                 if ( fmod( floor( uv.x * 100 / cSize ), 2.0 ) == 0.0 ) {
@@ -1204,11 +1186,6 @@ kernel void renderBSDF(        constant RenderUniform               &renderData 
             }
             sampleTexture.write(float4(radiance, renderData.backgroundColor.w), gid);
             return;
-        }
-        
-        if (didHitBBox) {
-            radiance = float3(1);
-            break;
         }
         
         Onb(state.normal, state.tangent, state.bitangent);
@@ -1237,10 +1214,6 @@ kernel void renderBSDF(        constant RenderUniform               &renderData 
         state.mat.atDistance = 1.0;
         
         Material material = mData.material;
-        
-//        if (hitPlane) {
-//            state.mat.albedo = float3(0.2, 0.2, 0.2);
-//        }
         
         if (mData.roleType == Modeler_GeometryAndMaterial) {
             // Geometry preview material blending
@@ -1457,7 +1430,7 @@ kernel void renderPBR(         constant RenderUniform               &renderData 
         
         bool hit = false;
         bool needsNormal = true;
-        float bd = INFINITY;
+        didHitBBox = true;
         
         // Check for border hit
         float3 p = ray.origin + ray.direction * t;
@@ -1472,18 +1445,10 @@ kernel void renderPBR(         constant RenderUniform               &renderData 
                 float3 p = ray.origin + ray.direction * t;
                 float d = getDistance(p, modelTexture, mData, editHit, materialMixValue, scale);
                 
-                // --- Visual Bounding Box, only test on the first pass
-                
-                if (renderData.showBBox == 1 && i == 0) {
-                    bd = sdBoxFrame(p, float(r), 0.004);
-                    d = min(d, bd);
-                }
-                
                 // ---
 
                 if (abs(d) < (0.0001*t*scale)) {
                     hit = true;
-                    if (didHitBBox && i == 0 && d == bd) didHitBBox = true;
                     break;
                 }
                 
@@ -1507,6 +1472,10 @@ kernel void renderPBR(         constant RenderUniform               &renderData 
     
     if (t == INFINITY) {
         radiance += pow(renderData.backgroundColor.xyz, 2.2);
+        if (didHitBBox) {
+            radiance += pow(renderData.backgroundColor.xyz, 2.2);
+            radiance += float3(0.001, 0.001, 0.001);
+        }
         /*
         else {
             float cSize = 2;
@@ -1519,11 +1488,6 @@ kernel void renderPBR(         constant RenderUniform               &renderData 
         }
         */
         sampleTexture.write(float4(radiance, renderData.backgroundColor.w), gid);
-        return;
-    }
-    
-    if (didHitBBox) {
-        radiance = float3(1);
         return;
     }
 
@@ -1566,52 +1530,52 @@ kernel void renderPBR(         constant RenderUniform               &renderData 
 
     Light light = renderData.lights[0];
     
-    float3 v = normalize(-direction);
+//    float3 v = normalize(-direction);
     float3 n = normal;
     float3 l = normalize( light.position - position );
-    float3 h = normalize(v + l);
+//    float3 h = normalize(v + l);
     float3 ref = normalize(reflect(direction, n));
 
-    float NoV = abs(dot(n, v)) + 1e-5;
-    float NoL = saturate(dot(n, l));
-    float NoH = saturate(dot(n, h));
-    float LoH = saturate(dot(l, h));
+//    float NoV = abs(dot(n, v)) + 1e-5;
+//    float NoL = saturate(dot(n, l));
+//    float NoH = saturate(dot(n, h));
+//    float LoH = saturate(dot(l, h));
 
     float3 baseColor = hitMaterial.albedo;
-    float roughness = hitMaterial.roughness;
+//    float roughness = hitMaterial.roughness;
     float metallic = hitMaterial.metallic;
 
-    float intensity = 3.0; // 2
-    float indirectIntensity = 0.6; // 0.64
+//    float intensity = 3.0; // 2
+//    float indirectIntensity = 0.6; // 0.64
     
-    float linearRoughness = roughness * roughness;
+//    float linearRoughness = roughness * roughness;
     float3 diffuseColor = (1.0 - metallic) * baseColor.rgb;
-    float3 f0 = 0.04 * (1.0 - metallic) + baseColor.rgb * metallic;
+//    float3 f0 = 0.04 * (1.0 - metallic) + baseColor.rgb * metallic;
 
-    float attenuation = 1;//shadow(position, l, mData, modelTexture, scale);
+//    float attenuation = 1;shadow(position, l, mData, modelTexture, scale);
     
     Ray lightRay;
     lightRay.origin = position;
     lightRay.direction = l;
     
-    if (insideHit(lightRay, t, mData, modelTexture, materialTexture3, scale)) {
-        attenuation = 0;
-    }
+//    if (insideHit(lightRay, t, mData, modelTexture, materialTexture3, scale)) {
+//        attenuation = 0;
+//    }
 
     // specular BRDF
-    float D = D_GGX(linearRoughness, NoH, h);
-    float V = V_SmithGGXCorrelated(linearRoughness, NoV, NoL);
-    float3 F = F_Schlick(f0, LoH);
-    float3 Fr = (D * V) * F;
+//    float D = D_GGX(linearRoughness, NoH, h);
+//    float V = V_SmithGGXCorrelated(linearRoughness, NoV, NoL);
+//    float3 F = F_Schlick(f0, LoH);
+//    float3 Fr = (D * V) * F;
 
     // diffuse BRDF
-    float3 Fd = diffuseColor * Fd_Burley(linearRoughness, NoV, NoL, LoH);
+    float3 Fd = diffuseColor;// * Fd_Burley(linearRoughness, NoV, NoL, LoH);
 
-    radiance = Fd + Fr;
-    radiance *= (intensity * attenuation * NoL) * float3(0.98, 0.92, 0.89);
+    radiance = Fd;// + Fr;
+    radiance *= /*(intensity * attenuation * NoL)*/ float3(0.98, 0.92, 0.89);
 
     // diffuse indirect
-    float3 indirectDiffuse = Irradiance_SphericalHarmonics(n) * Fd_Lambert();
+//    float3 indirectDiffuse = Irradiance_SphericalHarmonics(n) * Fd_Lambert();
     float3 indirectSpecular = pow(renderData.backgroundColor.xyz, 2.2);//float3(0.65, 0.85, 1.0) + ref.y * 0.72;
 
     Ray refRay;
@@ -1623,11 +1587,11 @@ kernel void renderPBR(         constant RenderUniform               &renderData 
     }
 
     // indirect contribution
-    float2 dfg = PrefilteredDFG_Karis(roughness, NoV);
-    float3 specularColor = f0 * dfg.x + dfg.y;
-    float3 ibl = diffuseColor * indirectDiffuse + indirectSpecular * specularColor;
+//    float2 dfg = PrefilteredDFG_Karis(roughness, NoV);
+//    float3 specularColor = f0 * dfg.x + dfg.y;
+//    float3 ibl = diffuseColor * indirectDiffuse + indirectSpecular * specularColor;
 
-    radiance += ibl * indirectIntensity;
+    //radiance += ibl * indirectIntensity;
     
     //radiance = color;
     
@@ -1713,3 +1677,10 @@ kernel void renderAccum(constant AccumUniform                       &accumData [
 
     finalTexture.write(final, gid);
 }
+
+// BSDF based on https://www.shadertoy.com/view/Dtl3WS
+
+// ---------------------------------------------
+// Hash & Random - From iq
+// ---------------------------------------------
+

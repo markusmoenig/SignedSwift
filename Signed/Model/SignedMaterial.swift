@@ -10,7 +10,6 @@ import Foundation
 class SignedMaterial: Codable {
     
     var data            : SignedData
-    var materialCode    : String = ""
 
     private enum CodingKeys: String, CodingKey {
         case data
@@ -53,14 +52,12 @@ class SignedMaterial: Codable {
     {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         data = try container.decode(SignedData.self, forKey: .data)
-        materialCode = try container.decode(String.self, forKey: .materialCode)
     }
     
     func encode(to encoder: Encoder) throws
     {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(data, forKey: .data)
-        try container.encode(materialCode, forKey: .materialCode)
     }
     
     func toMaterialStruct() -> Material {
