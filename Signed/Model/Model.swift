@@ -67,6 +67,9 @@ class Model: NSObject, ObservableObject {
     /// Current point changed
     let pointChanged                        = PassthroughSubject<Point?, Never>()
     
+    /// Show Context
+    let showContext                         = PassthroughSubject<(Point?, Shape?, Float, Float), Never>()
+    
     /// Project needs to rebuild
     let rebuild                             = PassthroughSubject<Void, Never>()
     
@@ -137,7 +140,22 @@ class Model: NSObject, ObservableObject {
                 if project.showShapes {
                     for shape in p.shapes?.allObjects as! [Shape] {
                         
-                        let cmd = SignedCommand("Sphere", role: .GeometryAndMaterial, action: .Add, primitive: .Sphere)
+                        var primitive : SignedCommand.Primitive = .Sphere
+                        if let name = shape.shapeName {
+                            if name == "Box" {
+                                primitive = .Box
+                            }
+                        }
+                        
+                        var action : SignedCommand.Action = .Add
+                        if let name = shape.blendModeName {
+                            if name == "Subtract" {
+                                print("jere")
+                                action = .Subtract
+                            }
+                        }
+                        
+                        let cmd = SignedCommand("Sphere", role: .GeometryAndMaterial, action: action, primitive: primitive)
                         
                         if let data = cmd.dataGroups.getGroup("Transform") {
                             data.set("position", float3(p.x, p.y, p.z))
@@ -145,7 +163,14 @@ class Model: NSObject, ObservableObject {
                         
                         if let data = cmd.dataGroups.getGroup("Geometry") {
                             data.set("radius", shape.radius)
-                            modeler?.executeCommand(cmd: cmd, id: 0)
+                            data.set("size", float3(shape.sizeX, shape.sizeY, shape.sizeZ))
+                        }
+
+                        if let data = cmd.dataGroups.getGroup("Boolean") {
+                            if let blendModeName = shape.blendModeName {
+                                data.set("mode", blendModeName)
+                                data.set("smoothing", shape.smoothing)
+                            }
                         }
                         
                         cmd.material.data.set("color", float3(shape.material!.red, shape.material!.green, shape.material!.blue))
@@ -155,9 +180,8 @@ class Model: NSObject, ObservableObject {
                         
                         if let data = cmd.dataGroups.getGroup("Modifier") {
                             data.set("noise", shape.noise)
-                            modeler?.executeCommand(cmd: cmd, id: id)
                         }
-
+                        modeler?.executeCommand(cmd: cmd, id: id)
                     }
                 }
                 

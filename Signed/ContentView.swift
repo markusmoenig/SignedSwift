@@ -29,7 +29,7 @@ struct ContentView: View {
             List {
                 ForEach(projects) { project in
                     NavigationLink {
-                        PreviewView(model: model, project: project)
+                        MainView(model: model, project: project)
                     } label: {
                         Text(project.name!)
                     }

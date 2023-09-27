@@ -32,10 +32,6 @@ struct Sidebar: View {
 
     @State var showText                     : String = "Points & Shapes"
 
-    @State private var pointXValue          = ""
-    @State private var pointYValue          = ""
-    @State private var pointZValue          = ""
-
     var body: some View {
         
         // Shape List
@@ -390,45 +386,9 @@ struct Sidebar: View {
                 showText = "Shapes Only"
             }
         }
-        
-        .onChange(of: pointXValue) { newValue in
-            if let point = selectedPoint {
-                if let v = Float(newValue) {
-                    point.x = v
-                    save("Cannot edit point")
-                    model.rebuild.send()
-                }
-            }
-        }
-        
-        .onChange(of: pointYValue) { newValue in
-            if let point = selectedPoint {
-                if let v = Float(newValue) {
-                    point.y = v
-                    save("Cannot edit point")
-                    model.rebuild.send()
-                }
-            }
-        }
-        
-        .onChange(of: pointZValue) { newValue in
-            if let point = selectedPoint {
-                if let v = Float(newValue) {
-                    point.z = v
-                    save("Cannot edit point")
-                    model.rebuild.send()
-                }
-            }
-        }
-        
+    
         .onReceive(self.model.pointChanged) { point in
-            print("got point")
             self.selectedPoint = point
-//            if let point = point {
-//                pointXValue = String(point.x)
-//                pointYValue = String(point.y)
-//                pointZValue = String(point.z)
-//            }
         }
     }
     
