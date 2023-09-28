@@ -43,7 +43,7 @@ struct FloatView: View {
             }), in: range.x...range.y)
             
             Text(floatValueText)
-                .frame(maxWidth: 40)
+                .frame(maxWidth: 45)
                 .onTapGesture {
                     editPopover = true
                 }

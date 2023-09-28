@@ -210,7 +210,7 @@ struct MainView: View {
                     
                     // Rename point
                     .popover(isPresented: self.$renamePointPopover,
-                             arrowEdge: .top
+                             arrowEdge: .bottom
                     ) {
                         VStack(alignment: .leading) {
                             if let point = selectedPoint {
@@ -566,7 +566,7 @@ struct MainView: View {
                 }) {
                     Text("MODEL")
                 }
-                .foregroundColor(modelIconColor)
+//                .foregroundColor(modelIconColor)
                 .buttonStyle(.borderless)
 
                 Button(action: {
@@ -578,7 +578,7 @@ struct MainView: View {
                 }) {
                     Text("RENDER")
                 }
-                .foregroundColor(renderIconColor)
+//                .foregroundColor(renderIconColor)
                 .buttonStyle(.borderless)
             }
             
@@ -623,7 +623,7 @@ struct MainView: View {
                 }) {
                     Text("POINTS")
                 }
-                .foregroundColor(editPointsPopover ? .accentColor : .secondary)
+//                .foregroundColor(editPointsPopover ? .accentColor : .secondary)
                 .buttonStyle(.borderless)
                 .popover(isPresented: $editPointsPopover,
                          arrowEdge: .bottom
@@ -688,6 +688,7 @@ struct MainView: View {
                                  }
                              })
                         }
+                        .listStyle(PlainListStyle())
                         .cornerRadius(10.0)
                     }
                     .frame(width: 300, height: 600)
@@ -698,7 +699,7 @@ struct MainView: View {
                 }) {
                     Text("LINES")
                 }
-                .foregroundColor(editLinesPopover ? .accentColor : .secondary)
+                //.foregroundColor(editLinesPopover ? .accentColor : .secondary)
                 .buttonStyle(.borderless)
                 .popover(isPresented: $editLinesPopover,
                          arrowEdge: .bottom
@@ -753,6 +754,7 @@ struct MainView: View {
                                  }
                              })
                         }
+                        .listStyle(PlainListStyle())
                         .cornerRadius(10.0)
                     }
                     .frame(width: 300, height: 600)
@@ -764,7 +766,7 @@ struct MainView: View {
                     Text("SHAPES")
                 }
                 .disabled(selectedPoint == nil && selectedLine == nil)
-                .foregroundColor(editShapesPopover ? .accentColor : .secondary)
+                //.foregroundColor(editShapesPopover ? .accentColor : .secondary)
                 .buttonStyle(.borderless)
                 .popover(isPresented: $editShapesPopover,
                          arrowEdge: .bottom
@@ -852,6 +854,7 @@ struct MainView: View {
                                      }
                                  })
                             }
+                            .listStyle(PlainListStyle())
                             .cornerRadius(10.0)
                         } else
                         if let selectedLine = selectedLine {
@@ -874,11 +877,16 @@ struct MainView: View {
                                      }
                                  })
                             }
+                            .listStyle(PlainListStyle())
                             .cornerRadius(10.0)
                         }
                         
                     }
+                    #if os(iOS)
                     .frame(width: 300, height: 600)
+                    #else
+                    .frame(width: 300, height: 600)
+                    #endif
                 }
                 /*
                 Button(action: {
@@ -903,6 +911,9 @@ struct MainView: View {
                  */
             }
         }
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
         
         .onReceive(model.projectChanged) { project in
             if project?.render == true {

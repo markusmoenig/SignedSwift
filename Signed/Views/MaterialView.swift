@@ -179,7 +179,11 @@ struct MaterialView: View {
             Spacer()
         }
         .padding()
+        #if os(iOS)
+        .frame(width: 300, height: 600)
+        #else
         .frame(width: 300, height: 450)
+        #endif
     }
     
     /// Save the context

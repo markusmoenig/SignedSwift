@@ -73,6 +73,7 @@ struct LineView: View {
                                     //.foregroundColor(point.id == selectedPoint?.id ? .accentColor : .secondary)
                             }
                         }
+                        .listStyle(PlainListStyle())
                         .cornerRadius(10.0)
                     }
                     .frame(width: 200, height: 400)
@@ -108,6 +109,7 @@ struct LineView: View {
                                     //.foregroundColor(point.id == selectedPoint?.id ? .accentColor : .secondary)
                             }
                         }
+                        .listStyle(PlainListStyle())
                         .cornerRadius(10.0)
                     }
                     .frame(width: 200, height: 400)

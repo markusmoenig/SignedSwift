@@ -36,20 +36,24 @@ struct ContentView: View {
                 }
                 .onDelete(perform: deleteProjects)
             }
+            #if os(iOS)
+            .listStyle(PlainListStyle())
+            #endif
             .toolbar {
-#if os(iOS)
+            #if os(iOS)
                 ToolbarItem(placement: .navigationBarTrailing) {
                     EditButton()
                 }
-#endif
+            #endif
                 ToolbarItem {
                     Button(action: newProject) {
                         Label("New Project", systemImage: "plus")
                     }
                 }
             }
-            
-
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
         }
         .onReceive(model.projectChanged) { project in
             model.currProject = project
