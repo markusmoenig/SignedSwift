@@ -635,7 +635,7 @@ class RenderPipeline
     }
     
     /// Allocate a texture of the given size
-    func allocateTexture2D(width: Int, height: Int, format: MTLPixelFormat = .rgba16Float) -> MTLTexture?
+    func allocateTexture2D(width: Int, height: Int, format: MTLPixelFormat = .rgba32Float) -> MTLTexture?
     {
         let textureDescriptor = MTLTextureDescriptor()
         textureDescriptor.textureType = MTLTextureType.type2D

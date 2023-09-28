@@ -19,17 +19,15 @@ struct ShapeView: View {
     
     let model                               : Model
     var project                             : Project
-    let point                               : Point
     let shape                               : Shape
+    
+    let nameWidth                           : CGFloat = 70
     
     @State var shapeName                    : String
     @State var blendModeName                : String
 
     @State var smoothingValue               : Float = 0
-    @State var smoothingValueText           : String = ""
-    
     @State var radiusValue                  : Float = 0
-    @State var radiusValueText              : String = ""
     
     @State var sizeXValue                   : Float = 0
     @State var sizeXValueText               : String = ""
@@ -43,13 +41,16 @@ struct ShapeView: View {
     @State private var materialPopover      : Bool = false
 
     @State var noiseValue                   : Float = 0
-    @State var noiseValueText               : String = ""
+    @State var onionValue                   : Float = 0
+
+    @State var cutOffValue                  : Float = 0
+    @State var cutOffValueText              : String = ""
     
-    init(model: Model, project: Project, point: Point, shape: Shape) {
+    
+    init(model: Model, project: Project, shape: Shape) {
         
         self.model = model
         self.project = project
-        self.point = point
         self.shape = shape
         
         if shape.shapeName == nil {
@@ -65,7 +66,6 @@ struct ShapeView: View {
         
         if shape.shapeName == "Sphere" {
             self._radiusValue = State(initialValue: shape.radius)
-            self._radiusValueText = State(initialValue: String(format: "%.03f", shape.radius))
         } else
         if shape.shapeName == "Box" {
             self._sizeXValue = State(initialValue: shape.sizeX)
@@ -78,12 +78,9 @@ struct ShapeView: View {
             self._sizeZValueText = State(initialValue: String(format: "%.03f", shape.sizeZ))
         }
         
-        
         self._smoothingValue = State(initialValue: shape.smoothing)
-        self._smoothingValueText = State(initialValue: String(format: "%.03f", shape.smoothing))
         
         self._noiseValue = State(initialValue: shape.noise)
-        self._noiseValueText = State(initialValue: String(format: "%.03f", shape.noise))
     }
     
     var body: some View {
@@ -111,25 +108,25 @@ struct ShapeView: View {
                 }) {
                     Text("Box")
                 }
+                Button(action: {
+                    shapeName = "Cylinder"
+                    shape.shapeName = "Cylinder"
+                    save("Change shape")
+                    model.build()
+                }) {
+                    Text("Cylinder")
+                }
             }, label: {
                 Text(shapeName)
             })
             
             if shapeName == "Sphere" {
-                HStack {
-                    Text("Radius")
-                    
-                    Slider(value: Binding<Float>(get: {radiusValue}, set: { v in
-                        radiusValue = v
-                        radiusValueText = String(format: "%.03f", v)
-                        shape.radius = v
+                FloatView(name: "Radius", nameWidth: nameWidth, value: $radiusValue, range: float2(0.001, 0.5))
+                    .onChange(of: radiusValue, perform: { value in
+                        shape.radius = value
                         model.build()
                         save("Radius")
-                    }), in: Float(0.001)...Float(0.5))
-                    
-                    Text(radiusValueText)
-                        .frame(maxWidth: 40)
-                }
+                    })
             } else
             if shapeName == "Box" {
                 HStack {
@@ -197,22 +194,12 @@ struct ShapeView: View {
                 Text("Blend: " + blendModeName)
             })
             
-            //if shapeName == "Sphere" {
-                HStack {
-                    Text("Smoothing")
-                    
-                    Slider(value: Binding<Float>(get: {smoothingValue}, set: { v in
-                        smoothingValue = v
-                        smoothingValueText = String(format: "%.03f", v)
-                        shape.smoothing = v
-                        model.build()
-                        save("Smoothing")
-                    }), in: Float(0.0)...Float(0.5))
-                    
-                    Text(smoothingValueText)
-                        .frame(maxWidth: 40)
-                }
-            //}
+            FloatView(name: "Smoothing", nameWidth: nameWidth, value: $smoothingValue, range: float2(0.0, 0.5))
+                .onChange(of: smoothingValue, perform: { value in
+                    shape.smoothing = value
+                    model.build()
+                    save("Smoothing")
+                })
             
             Button(action: {
                 materialPopover = true
@@ -223,24 +210,38 @@ struct ShapeView: View {
                      arrowEdge: .leading
             ) {
                 VStack(alignment: .leading) {
-                    MaterialView(model: model, project: project, point: point, shape: shape)
-                }.padding()
+                    MaterialView(model: model, project: project, shape: shape)
+                }
             }
                 
             //Text("Modifier")
             //.bold()
-            HStack {
-                Text("Noise")
-                
-                Slider(value: Binding<Float>(get: {noiseValue}, set: { v in
-                    noiseValue = v
-                    noiseValueText = String(format: "%.02f", v)
-                    shape.noise = v
+            FloatView(name: "Noise", nameWidth: nameWidth, value: $noiseValue, range: float2(0.0, 2.0))
+                .onChange(of: noiseValue, perform: { value in
+                    shape.noise = value
                     model.build()
                     save("Noise")
-                }), in: Float(0.001)...Float(2.0))
+                })
+            
+            FloatView(name: "Onion", nameWidth: nameWidth, value: $onionValue, range: float2(0.0, 0.1))
+                .onChange(of: onionValue, perform: { value in
+                    shape.onion = value
+                    model.build()
+                    save("Onion")
+                })
+            
+            HStack {
+                Text("CutOffX")
                 
-                Text(noiseValueText)
+                Slider(value: Binding<Float>(get: {cutOffValue}, set: { v in
+                    cutOffValue = v
+                    cutOffValueText = String(format: "%.02f", v)
+                    shape.cutOffX = v
+                    model.build()
+                    save("CutOffX")
+                }), in: Float(0.001)...Float(1.0))
+                
+                Text(cutOffValueText)
                     .frame(maxWidth: 40)
             }
         }

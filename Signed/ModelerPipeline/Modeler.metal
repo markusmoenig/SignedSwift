@@ -101,13 +101,13 @@ float sdRoundBox(float3 p, float3 b, float r )
 
 float sdCappedCylinder(float3 p, float h, float r )
 {
-    float2 d = abs(float2(length(p.xz),p.y)) - float2(h,r);
+    float2 d = abs(float2(length(p.yz),p.x)) - float2(h,r);
     return min(max(d.x,d.y),0.0) + length(max(d,0.0));
 }
 
 float sdRoundedCylinder(float3 p, float ra, float rb, float h )
 {
-    float2 d = float2( length(p.xz)-2.0*ra+rb, abs(p.y) - h );
+    float2 d = float2( length(p.yz)-2.0*ra+rb, abs(p.x) - h );
     return min(max(d.x,d.y),0.0) + length(max(d,0.0)) - rb;
 }
 
@@ -226,12 +226,12 @@ float applyModelerData(float3 uv, float dist, constant ModelerUniform &mData, fl
         //newDist -= valueNoiseFBM(p * 30, 5) * 0.02;
     } else
     if (mData.primitiveType == Modeler_Shape_Cylinder) {
-        newDist = sdRoundedCylinder(p, mData.radius * scale, mData.rounding, mData.height * scale);
+//        newDist = sdRoundedCylinder(p, mData.radius * scale, mData.rounding, mData.height * scale);
+        newDist = sdCappedCylinder(p, mData.radius * scale, mData.height * scale);
     }
     
     if (mData.onion > 0) {
         newDist = abs(newDist) - mData.onion;
-        //if (p.x > 0.0) newDist = dist;
     }
     
     newDist = max(newDist, p.x - mData.max.x);

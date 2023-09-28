@@ -166,7 +166,14 @@ public class SMTKView       : MTKView
                         for p in project.points?.allObjects as! [Point] {
                             if p.id == uuid {
                                 model.pointChanged.send(p)
-                                model.showContext.send((nil, nil, mousePos.x, mousePos.y))
+                                //model.showContext.send((nil, nil, mousePos.x, mousePos.y))
+                                break
+                            }
+                        }
+                        for l in project.lines?.allObjects as! [Line] {
+                            if l.id == uuid {
+                                model.lineChanged.send(l)
+                                //model.showContext.send((nil, nil, mousePos.x, mousePos.y))
                                 break
                             }
                         }

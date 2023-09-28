@@ -172,9 +172,9 @@ class SignedProject: Codable {
     
     /// Get the maximum amount of samples
     func getMaxSamples() -> Int32 {
-        if let renderData = dataGroups.getGroup("Renderer") {
-            return Int32(renderData.getInt("Samples", 400))
-        }
-        return 400
+//        if let renderData = dataGroups.getGroup("Renderer") {
+//            return Int32(renderData.getInt("Samples", 400))
+//        }
+        return 4000
     }
 }

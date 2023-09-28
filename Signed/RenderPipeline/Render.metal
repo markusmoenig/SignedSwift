@@ -1209,7 +1209,7 @@ kernel void renderBSDF(        constant RenderUniform               &renderData 
         state.mat.clearcoatGloss = clearcoatGlossSpecTransIor.x;
         state.mat.specTrans = clearcoatGlossSpecTransIor.y;
         state.mat.ior = clearcoatGlossSpecTransIor.z;
-        state.mat.emission = emissionId.xyz;
+        state.mat.emission = emissionId.x * colorAndRoughness.xyz;
         //int id = int(emissionId.w);
         state.mat.atDistance = 1.0;
         
@@ -1530,52 +1530,52 @@ kernel void renderPBR(         constant RenderUniform               &renderData 
 
     Light light = renderData.lights[0];
     
-//    float3 v = normalize(-direction);
+    float3 v = normalize(-direction);
     float3 n = normal;
     float3 l = normalize( light.position - position );
-//    float3 h = normalize(v + l);
+    float3 h = normalize(v + l);
     float3 ref = normalize(reflect(direction, n));
 
-//    float NoV = abs(dot(n, v)) + 1e-5;
-//    float NoL = saturate(dot(n, l));
-//    float NoH = saturate(dot(n, h));
-//    float LoH = saturate(dot(l, h));
+    float NoV = abs(dot(n, v)) + 1e-5;
+    float NoL = saturate(dot(n, l));
+    float NoH = saturate(dot(n, h));
+    float LoH = saturate(dot(l, h));
 
     float3 baseColor = hitMaterial.albedo;
-//    float roughness = hitMaterial.roughness;
+    float roughness = hitMaterial.roughness;
     float metallic = hitMaterial.metallic;
 
-//    float intensity = 3.0; // 2
-//    float indirectIntensity = 0.6; // 0.64
+    float intensity = 3.0; // 2
+    float indirectIntensity = 0.6; // 0.64
     
-//    float linearRoughness = roughness * roughness;
+    float linearRoughness = roughness * roughness;
     float3 diffuseColor = (1.0 - metallic) * baseColor.rgb;
-//    float3 f0 = 0.04 * (1.0 - metallic) + baseColor.rgb * metallic;
+    float3 f0 = 0.04 * (1.0 - metallic) + baseColor.rgb * metallic;
 
-//    float attenuation = 1;shadow(position, l, mData, modelTexture, scale);
+    float attenuation = 1;shadow(position, l, mData, modelTexture, scale);
     
     Ray lightRay;
     lightRay.origin = position;
     lightRay.direction = l;
     
-//    if (insideHit(lightRay, t, mData, modelTexture, materialTexture3, scale)) {
-//        attenuation = 0;
-//    }
+    if (insideHit(lightRay, t, mData, modelTexture, materialTexture3, scale)) {
+        attenuation = 0;
+    }
 
     // specular BRDF
-//    float D = D_GGX(linearRoughness, NoH, h);
-//    float V = V_SmithGGXCorrelated(linearRoughness, NoV, NoL);
-//    float3 F = F_Schlick(f0, LoH);
-//    float3 Fr = (D * V) * F;
+    float D = D_GGX(linearRoughness, NoH, h);
+    float V = V_SmithGGXCorrelated(linearRoughness, NoV, NoL);
+    float3 F = F_Schlick(f0, LoH);
+    float3 Fr = (D * V) * F;
 
     // diffuse BRDF
-    float3 Fd = diffuseColor;// * Fd_Burley(linearRoughness, NoV, NoL, LoH);
+    float3 Fd = diffuseColor * Fd_Burley(linearRoughness, NoV, NoL, LoH);
 
-    radiance = Fd;// + Fr;
-    radiance *= /*(intensity * attenuation * NoL)*/ float3(0.98, 0.92, 0.89);
+    radiance = Fd + Fr;
+    radiance *= (intensity * attenuation * NoL) * float3(0.98, 0.92, 0.89);
 
     // diffuse indirect
-//    float3 indirectDiffuse = Irradiance_SphericalHarmonics(n) * Fd_Lambert();
+    float3 indirectDiffuse = Irradiance_SphericalHarmonics(n) * Fd_Lambert();
     float3 indirectSpecular = pow(renderData.backgroundColor.xyz, 2.2);//float3(0.65, 0.85, 1.0) + ref.y * 0.72;
 
     Ray refRay;
@@ -1587,14 +1587,12 @@ kernel void renderPBR(         constant RenderUniform               &renderData 
     }
 
     // indirect contribution
-//    float2 dfg = PrefilteredDFG_Karis(roughness, NoV);
-//    float3 specularColor = f0 * dfg.x + dfg.y;
-//    float3 ibl = diffuseColor * indirectDiffuse + indirectSpecular * specularColor;
+    float2 dfg = PrefilteredDFG_Karis(roughness, NoV);
+    float3 specularColor = f0 * dfg.x + dfg.y;
+    float3 ibl = diffuseColor * indirectDiffuse + indirectSpecular * specularColor;
 
-    //radiance += ibl * indirectIntensity;
-    
-    //radiance = color;
-    
+    radiance += ibl * indirectIntensity;
+        
     sampleTexture.write(float4(radiance, 1.0), gid);
 }
 
@@ -1673,14 +1671,8 @@ kernel void renderAccum(constant AccumUniform                       &accumData [
     sample = clamp(sample, 0, 5);
     
     float k = accumData.samples + 1;
-    final = final * (1.0 - 1.0/k) + sample * (1.0/k);
+    final = mix(final, sample, 1.0/k);// final * (1.0 - 1.0/k) + sample * (1.0/k);
 
     finalTexture.write(final, gid);
 }
-
-// BSDF based on https://www.shadertoy.com/view/Dtl3WS
-
-// ---------------------------------------------
-// Hash & Random - From iq
-// ---------------------------------------------
 

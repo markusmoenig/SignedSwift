@@ -87,7 +87,7 @@ struct Sidebar: View {
                     ForEach(selectedPoint.shapes?.allObjects as! [Shape]) { shape in
                         //Section(header: Text(shape.name!)) {
                         
-                        ShapeView(model: model, project: project, point: selectedPoint, shape: shape)
+                        ShapeView(model: model, project: project, shape: shape)
                     }
                     .onDelete(perform: { offsets in
                         offsets.map { selectedPoint.shapes?.allObjects[$0] as! NSManagedObject }.forEach(viewContext.delete)

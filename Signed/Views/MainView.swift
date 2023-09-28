@@ -33,6 +33,9 @@ struct MainView: View {
     @State private var renamePointPopover               : Bool = false
     @State private var pointName                        : String = ""
 
+    @State private var renameLinePopover                : Bool = false
+    @State private var lineName                         : String = ""
+    
     @State private var editPointPopover                 : Bool = false
 
     @State private var editContextPopover               : Bool = false
@@ -105,7 +108,8 @@ struct MainView: View {
                     .padding(.bottom, geometry.size.height - CGFloat(yOffsetPopup) - 50)
                 }
                 
-                if selectedPoint == nil {
+                if selectedPoint == nil && selectedLine == nil {
+                    /*
                     Menu {
                         Button("Set Custom", action: {
                                                             
@@ -168,7 +172,7 @@ struct MainView: View {
                             .padding(.leading, 10)
                             .frame(minWidth: 200)
                         }.padding()
-                    }
+                    }*/
                 } else
                 if let point = selectedPoint {
                     Menu {
@@ -216,6 +220,114 @@ struct MainView: View {
                                     model.pointChanged.send(nil)
                                     model.pointChanged.send(point)
                                     save("Cannot rename Point")
+                                })
+                                .frame(minWidth: 200)
+                            }
+                        }
+                        .padding()
+                    }
+                    
+                    /*
+                    // Edit Shapes
+                    .popover(isPresented: $editContextPopover,
+                             attachmentAnchor: .rect(.rect(CGRectMake(geometry.size.width / 2, geometry.size.height, 200, 300))),//.point(UnitPoint(x:) 0.1, y: 0.5)),
+                             arrowEdge: .bottom
+                    ) {
+                        VStack(alignment: .leading) {
+                            HStack {
+                                Text("Test")
+                            }
+                        }
+                        .padding()
+                        .frame(width: 250)
+                    }*/
+                    
+                    // Edit point
+                    .popover(isPresented: self.$editPointPopover,
+                             arrowEdge: .top
+                    ) {
+                        VStack(alignment: .leading) {
+                            HStack {
+                                
+                                TextField("X Value", text: $pointXValue)
+                                    .border(Color.red)
+                                    .disabled(selectedPoint == nil)
+        #if os(iOS)
+                                    .keyboardType(.numberPad)
+        #endif
+                                    .onReceive(Just(pointXValue)) { newValue in
+                                        let filtered = newValue.filter { "0123456789.-+".contains($0) }
+                                        if filtered != newValue {
+                                            self.pointXValue = filtered
+                                        }
+                                    }
+                                
+                                TextField("Y Value", text: $pointYValue)
+                                    .border(Color.green)
+                                    .disabled(selectedPoint == nil)
+        #if os(iOS)
+                                    .keyboardType(.numberPad)
+        #endif
+                                    .onReceive(Just(pointYValue)) { newValue in
+                                        let filtered = newValue.filter { "0123456789.-+".contains($0) }
+                                        if filtered != newValue {
+                                            self.pointYValue = filtered
+                                        }
+                                    }
+                                
+                                TextField("Z Value", text: $pointZValue)
+                                    .border(Color.blue)
+                                    .disabled(selectedPoint == nil)
+        #if os(iOS)
+                                    .keyboardType(.numberPad)
+        #endif
+                                    .onReceive(Just(pointZValue)) { newValue in
+                                        let filtered = newValue.filter { "0123456789.-+".contains($0) }
+                                        if filtered != newValue {
+                                            self.pointZValue = filtered
+                                        }
+                                    }
+                            }
+                        }
+                        .padding()
+                        .frame(width: 250)
+                    }
+                } else
+                if let line = selectedLine {
+                    Menu {
+                        Button("Rename", action: {
+                            renameLinePopover = true
+                            lineName = line.name!
+                        })
+                        
+                        Button("Delete", action: {
+                            viewContext.delete(line)
+                            model.lineChanged.send(nil)
+                            save("Cannot delete line")
+                            model.build()
+                        })
+                    }
+                    label: {
+                        Text("Line: " + line.name!)
+                    }
+                    .padding(.trailing, 6)
+                    .padding(.leading, 10)
+                    .padding(.bottom, geometry.size.height - 25)
+                    .frame(width: 150)
+                    .menuStyle(BorderlessButtonMenuStyle())
+                    
+                    // Rename line
+                    .popover(isPresented: self.$renameLinePopover,
+                             arrowEdge: .top
+                    ) {
+                        VStack(alignment: .leading) {
+                            if let line = selectedLine {
+                                Text("Name:")
+                                TextField("Name", text: $lineName, onEditingChanged: { (changed) in
+                                    line.name = lineName
+                                    model.lineChanged.send(nil)
+                                    model.lineChanged.send(line)
+                                    save("Cannot rename line")
                                 })
                                 .frame(minWidth: 200)
                             }
@@ -521,7 +633,7 @@ struct MainView: View {
                         HStack(alignment: .center) {
                             Text("POINTS")
                                 .font(.system(size: 20))
-                                .padding(.top, 5)
+                                .padding(.top, 10)
                                 .padding(.leading, 10)
 
                             Spacer()
@@ -549,8 +661,8 @@ struct MainView: View {
                             }) {
                                 Label("", systemImage: "plus")
                             }
-                            .padding(.top, 5)
-                            .padding(.trailing, 10)
+                            .padding(.top, 10)
+                            .padding(.trailing, 5)
                             .imageScale(.large)
                             .buttonStyle(.borderless)
                         }
@@ -558,6 +670,7 @@ struct MainView: View {
                         List {
                             ForEach((project.points!.allObjects as! [Point]).sorted { $0.index < $1.index } ) { point in
                                 Text(point.name!)
+                                    .font(.system(size: 18))
                                     .onTapGesture {
                                         model.pointChanged.send(point)
                                     }
@@ -577,7 +690,6 @@ struct MainView: View {
                         }
                         .cornerRadius(10.0)
                     }
-                    .padding()
                     .frame(width: 300, height: 600)
                 }
                 
@@ -596,7 +708,7 @@ struct MainView: View {
                         HStack(alignment: .center) {
                             Text("LINES")
                                 .font(.system(size: 20))
-                                .padding(.top, 5)
+                                .padding(.top, 10)
                                 .padding(.leading, 10)
 
                             Spacer()
@@ -619,8 +731,8 @@ struct MainView: View {
                             }) {
                                 Label("", systemImage: "plus")
                             }
-                            .padding(.top, 5)
-                            .padding(.trailing, 10)
+                            .padding(.top, 10)
+                            .padding(.trailing, 5)
                             .imageScale(.large)
                             .buttonStyle(.borderless)
                         }
@@ -643,17 +755,15 @@ struct MainView: View {
                         }
                         .cornerRadius(10.0)
                     }
-                    .padding()
                     .frame(width: 300, height: 600)
                 }
 
-                
                 Button(action: {
                     editShapesPopover = true
                 }) {
                     Text("SHAPES")
                 }
-                .disabled(selectedPoint == nil)
+                .disabled(selectedPoint == nil && selectedLine == nil)
                 .foregroundColor(editShapesPopover ? .accentColor : .secondary)
                 .buttonStyle(.borderless)
                 .popover(isPresented: $editShapesPopover,
@@ -661,62 +771,72 @@ struct MainView: View {
                 ) {
                     VStack(alignment: .leading) {
                         
-                        if let selectedPoint = selectedPoint {
+                        HStack(alignment: .center) {
+                            Text("Shapes")
+                                .font(.system(size: 20))
+                                .padding(.top, 10)
+                                .padding(.leading, 10)
 
-                            HStack(alignment: .center) {
-                                Text("Shapes")
-                                    .font(.system(size: 20))
-                                    .padding(.top, 5)
-                                    .padding(.leading, 10)
-
-                                Spacer()
+                            Spacer()
+                            
+                            Button(action: {
                                 
-                                Button(action: {
-                                    
-                                    let shape = Shape(context: viewContext)
-                                    
-                                    shape.name = "Unnamed"
-                                    shape.id = UUID()
-                                    shape.blendModeName = "add"
-                                    
-                                    shape.x = 0.0
-                                    shape.y = 0.0
-                                    shape.z = 0.0
-                                    
-                                    shape.radius = 0.2
-                                    shape.sizeX = 0.2
-                                    shape.sizeY = 0.2
-                                    shape.sizeZ = 0.2
+                                let shape = Shape(context: viewContext)
+                                
+                                shape.name = "Unnamed"
+                                shape.id = UUID()
+                                shape.blendModeName = "Add"
+                                
+                                shape.x = 0.0
+                                shape.y = 0.0
+                                shape.z = 0.0
+                                
+                                shape.radius = 0.2
+                                shape.sizeX = 0.2
+                                shape.sizeY = 0.2
+                                shape.sizeZ = 0.2
+                                
+                                let bsdf = BSDF(context: viewContext)
+                                bsdf.red = 0.5
+                                bsdf.green = 0.5
+                                bsdf.blue = 0.5
+                                bsdf.roughness = 0.5
+                                bsdf.metallic = 0.0
+                                
+                                shape.material = bsdf
+                                
+                                if let selectedPoint = selectedPoint {
                                     
                                     shape.index = Int16(selectedPoint.shapes!.count)
-
-                                    let bsdf = BSDF(context: viewContext)
-                                    bsdf.red = 0.5
-                                    bsdf.green = 0.5
-                                    bsdf.blue = 0.5
-                                    bsdf.roughness = 0.5
-                                    bsdf.metallic = 0.0
-                                    
-                                    shape.material = bsdf
                                     
                                     selectedPoint.addToShapes(shape)
                                     self.selectedPoint = nil
                                     self.selectedPoint = selectedPoint
-                                    selectedShape = shape
+                                } else
+                                if let selectedLine = selectedLine {
+                                    shape.index = Int16(selectedLine.shapes!.count)
                                     
-                                    save("Cannot add shape")
-                                }) {
-                                    Label("", systemImage: "plus")
+                                    selectedLine.addToShapes(shape)
+                                    self.selectedLine = nil
+                                    self.selectedLine = selectedLine
                                 }
-                                .padding(.top, 5)
-                                .padding(.trailing, 10)
-                                .imageScale(.large)
-                                .buttonStyle(.borderless)
+                                selectedShape = shape
+
+                                save("Cannot add shape")
+                            }) {
+                                Label("", systemImage: "plus")
                             }
+                            .padding(.top, 10)
+                            .padding(.trailing, 5)
+                            .imageScale(.large)
+                            .buttonStyle(.borderless)
+                        }
+                        
+                        if let selectedPoint = selectedPoint {
                             
                             List {
                                 ForEach((selectedPoint.shapes!.allObjects as! [Shape]).sorted { $0.index < $1.index } ) { shape in
-                                    ShapeView(model: model, project: project, point: selectedPoint, shape: shape)
+                                    ShapeView(model: model, project: project, shape: shape)
                                 }
                                  .onDelete(perform: { offsets in
                                      offsets.map { selectedPoint.shapes?.allObjects[$0] as! NSManagedObject }.forEach(viewContext.delete)
@@ -733,10 +853,31 @@ struct MainView: View {
                                  })
                             }
                             .cornerRadius(10.0)
+                        } else
+                        if let selectedLine = selectedLine {
+                            
+                            List {
+                                ForEach((selectedLine.shapes!.allObjects as! [Shape]).sorted { $0.index < $1.index } ) { shape in
+                                    ShapeView(model: model, project: project, shape: shape)
+                                }
+                                 .onDelete(perform: { offsets in
+                                     offsets.map { selectedLine.shapes?.allObjects[$0] as! NSManagedObject }.forEach(viewContext.delete)
+                                     
+                                     self.selectedLine = nil
+                                     self.selectedLine = selectedLine
+                                     selectedShape = nil
+                                     do {
+                                         try viewContext.save()
+                                     } catch {
+                                         let nsError = error as NSError
+                                         print("Cannot delete shapes", nsError)
+                                     }
+                                 })
+                            }
+                            .cornerRadius(10.0)
                         }
                         
                     }
-                    .padding()
                     .frame(width: 300, height: 600)
                 }
                 /*
@@ -796,11 +937,17 @@ struct MainView: View {
         
         .onReceive(self.model.pointChanged) { point in
             self.selectedPoint = point
+            self.selectedLine = nil
             if let point = point {
                 pointXValue = String(point.x)
                 pointYValue = String(point.y)
                 pointZValue = String(point.z)
             }
+        }
+        
+        .onReceive(self.model.lineChanged) { line in
+            self.selectedPoint = nil
+            self.selectedLine = line
         }
         
         .onReceive(self.model.showContext) { ctx in
