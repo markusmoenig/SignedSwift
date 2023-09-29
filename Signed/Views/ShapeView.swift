@@ -210,7 +210,7 @@ struct ShapeView: View {
                      arrowEdge: .leading
             ) {
                 VStack(alignment: .leading) {
-                    MaterialView(model: model, project: project, shape: shape)
+                    //MaterialView(model: model, project: project, shape: shape)
                 }
             }
                 

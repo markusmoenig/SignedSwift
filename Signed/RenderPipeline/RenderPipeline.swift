@@ -324,6 +324,10 @@ class RenderPipeline
     
     func renderPointCloud(width: Int, height: Int) {
         
+        if model.currProject?.points?.count == 0 {
+            return
+        }
+            
         if pointCloudTexture == nil || pointCloudTexture!.width != width || pointCloudTexture!.height != height{
             pointCloudTexture = allocateTexture2D(width: width, height: height)
         }
@@ -336,26 +340,28 @@ class RenderPipeline
                 
                 computeEncoder.setComputePipelineState( state )
                 
-                //var renderUniforms = createRenderUniform(kit: kit)
-                //computeEncoder.setBytes(&renderUniforms, length: MemoryLayout<RenderUniform>.stride, index: 0)
-                
-                //                if kit.role == .main {
-                //                    var modelerUniform = ModelerUniform()
-                //                    modelerUniform.actionType = 0
-                //                    computeEncoder.setBytes(&modelerUniform, length: MemoryLayout<ModelerUniform>.stride, index: 1)
-                //                } else {
-                ////                    var modelerUniform = model.modeler?.createModelerUniform(model.iconCmd, kit: kit, forPreview: true)
-                ////                    computeEncoder.setBytes(&modelerUniform, length: MemoryLayout<ModelerUniform>.stride, index: 1)
-                //                }
-                //              
-                
+                var numberOfPoints : Int = 0
+                var points : [float4] = []
+
+                if let project = model.currProject {
+                    numberOfPoints = project.points!.count
+                    for p in project.points?.allObjects as! [Point] {
+                        points.append(float4(p.x, p.y, p.z, 0.0))
+                        points.append(float4(p.red, p.green, p.blue, 0.0))
+                    }
+                }
+                                
                 var pointCloudUniform = PointCloudUniform()
-                
                 pointCloudUniform.cameraOrigin = model.project.camera.getPosition()
                 pointCloudUniform.cameraLookAt = model.project.camera.getLookAt()
                 pointCloudUniform.cameraFov = model.project.camera.getFov()
+                pointCloudUniform.numberOfPoints = Int32(numberOfPoints)
+                
+                let dataBufferLength = numberOfPoints * MemoryLayout<float4>.stride
+                let dataBuffer = device.makeBuffer(bytes: points, length: dataBufferLength, options: [])!
                 
                 computeEncoder.setBytes(&pointCloudUniform, length: MemoryLayout<PointCloudUniform>.stride, index: 0)
+                computeEncoder.setBuffer(dataBuffer, offset: 0, index: 2)
 
                 computeEncoder.setTexture(pointCloudTexture!, index: 1)
                 calculateThreadGroups(state, computeEncoder, pointCloudTexture!)

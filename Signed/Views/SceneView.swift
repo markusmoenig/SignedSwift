@@ -13,7 +13,7 @@ import CoreData
 import MobileCoreServices
 #endif
 
-struct MainView: View {
+struct SceneView: View {
     
     @Environment(\.managedObjectContext) private var viewContext
 
@@ -43,6 +43,9 @@ struct MainView: View {
     @State private var editPointsPopover                : Bool = false
     @State private var editLinesPopover                 : Bool = false
     @State private var editShapesPopover                : Bool = false
+    
+    @State private var renderIsMain                     : Bool = true
+    @State private var showSideKick                     : Bool = true
 
     @State private var pathTraceIsOn                    : Bool = false
 
@@ -90,32 +93,47 @@ struct MainView: View {
             
             ZStack(alignment: .bottomLeading) {
                 // Show tools
-                
-                RenderView(model: model, mode: .Render3D)
-                //.animation(.default)
-                    .allowsHitTesting(true)
-
-                if editContextPopover {
-                    VStack {
-                        HStack {
-                            Spacer()
-                            Text("CLOSE")
-                                .onTapGesture {
-                                    editContextPopover = false
-                                }
-                            
-                            //ShapeView(model: model, project: project, point: selectedPoint!, shape: selectedShape!)
+                                    
+                if renderIsMain {
+                    RenderView(model: model, mode: .Render3D)
+                        .allowsHitTesting(true)
+                    
+                    /*
+                    if editContextPopover {
+                        VStack {
+                            HStack {
+                                Spacer()
+                                Text("CLOSE")
+                                    .onTapGesture {
+                                        editContextPopover = false
+                                    }
+                                
+                                //ShapeView(model: model, project: project, point: selectedPoint!, shape: selectedShape!)
+                            }
                         }
+                        .frame(width: 100)
+                        .padding(.leading, CGFloat(xOffsetPopup) + 50)
+                        .padding(.bottom, geometry.size.height - CGFloat(yOffsetPopup) - 50)
+                    }*/
+                    
+                    if showSideKick {
+                        PointCloud(model: model, project: project)
+                            .frame(width: geometry.size.width / 4, height: geometry.size.height / 4)
+                            .padding(.leading, geometry.size.width - geometry.size.width / 4)
+                            .padding(.bottom, 0)
                     }
-                    .frame(width: 100)
-                    .padding(.leading, CGFloat(xOffsetPopup) + 50)
-                    .padding(.bottom, geometry.size.height - CGFloat(yOffsetPopup) - 50)
+                } else {
+                    PointCloud(model: model, project: project)
+                        .allowsHitTesting(true)
+                                 
+                    if showSideKick {
+                        RenderView(model: model, mode: .Render3D)
+                            .frame(width: geometry.size.width / 4, height: geometry.size.height / 4)
+                            .padding(.leading, geometry.size.width - geometry.size.width / 4)
+                            .padding(.bottom, 0)
+                    }
                 }
-                
-                ModelView(model: model, project: project)
-                    .frame(width: 200, height: 200)
-                    .padding(.leading, geometry.size.width - 200)
-                    .padding(.bottom, 0)
+                    
                 
                 if selectedPoint == nil && selectedLine == nil {
                     /*
@@ -564,15 +582,33 @@ struct MainView: View {
         
         .toolbar {
             
-        
             ToolbarItemGroup(placement: .automatic) {
+                
+                Button(action: {
+                    renderIsMain.toggle()
+                    model.renderIsMain = renderIsMain
+                }) {
+                    Label("Cycle", systemImage: "arrow.2.squarepath")
+                        .imageScale(.large)
+                }
+                
+                Button(action: {
+                    withAnimation {
+                        showSideKick.toggle()
+                    }
+                }) {
+                    Label("SideKick", systemImage: showSideKick ? "cube.transparent.fill" : "cube.transparent")
+                        .imageScale(.large)
+                }
+            
+                Spacer()
+                
                 Button(action: {
                     editSettingsPopover = true
                 }) {
                     Label("SETTINGS", systemImage: editSettingsPopover ? "gearshape.fill" : "gearshape")
                         .imageScale(.large)
                 }
-                .buttonStyle(.borderless)
                 .popover(isPresented: $editSettingsPopover,
                          arrowEdge: .bottom
                 ) {
@@ -632,7 +668,6 @@ struct MainView: View {
                 }) {
                     Label("POINTS", systemImage: editPointsPopover ? "circle.fill" : "circle")
                 }
-                .buttonStyle(.borderless)
                 .popover(isPresented: $editPointsPopover,
                          arrowEdge: .bottom
                 ) {
@@ -708,7 +743,6 @@ struct MainView: View {
                     Label("LINES", systemImage: editLinesPopover ? "line.diagonal" : "line.diagonal")
                         .imageScale(.large)
                 }
-                .buttonStyle(.borderless)
                 .popover(isPresented: $editLinesPopover,
                          arrowEdge: .bottom
                 ) {
@@ -775,7 +809,6 @@ struct MainView: View {
                         .imageScale(.large)
                 }
                 .disabled(selectedPoint == nil && selectedLine == nil)
-                .buttonStyle(.borderless)
                 .popover(isPresented: $editShapesPopover,
                          arrowEdge: .bottom
                 ) {
@@ -805,16 +838,7 @@ struct MainView: View {
                                 shape.sizeX = 0.2
                                 shape.sizeY = 0.2
                                 shape.sizeZ = 0.2
-                                
-                                let bsdf = BSDF(context: viewContext)
-                                bsdf.red = 0.5
-                                bsdf.green = 0.5
-                                bsdf.blue = 0.5
-                                bsdf.roughness = 0.5
-                                bsdf.metallic = 0.0
-                                
-                                shape.material = bsdf
-                                
+                                                                
                                 if let selectedPoint = selectedPoint {
                                     
                                     shape.index = Int16(selectedPoint.shapes!.count)
@@ -936,11 +960,11 @@ struct MainView: View {
         .onReceive(self.model.pointChanged) { point in
             self.selectedPoint = point
             self.selectedLine = nil
-            if let point = point {
-                pointXValue = String(point.x)
-                pointYValue = String(point.y)
-                pointZValue = String(point.z)
-            }
+//            if let point = point {
+//                pointXValue = String(point.x)
+//                pointYValue = String(point.y)
+//                pointZValue = String(point.z)
+//            }
         }
         
         .onReceive(self.model.lineChanged) { line in

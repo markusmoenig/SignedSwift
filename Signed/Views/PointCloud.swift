@@ -13,7 +13,7 @@ import CoreData
 import MobileCoreServices
 #endif
 
-struct ModelView: View {
+struct PointCloud: View {
     
     @Environment(\.managedObjectContext) private var viewContext
     
@@ -36,6 +36,7 @@ struct ModelView: View {
             
             ZStack(alignment: .bottomLeading) {
                 RenderView(model: model, mode: .Points3D)
+
             }
         }
     }

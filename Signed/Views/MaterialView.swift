@@ -14,6 +14,7 @@ import Combine
 import MobileCoreServices
 #endif
 
+/*
 struct MaterialView: View {
     
     @Environment(\.managedObjectContext) private var viewContext
@@ -197,3 +198,4 @@ struct MaterialView: View {
     }
 }
         
+*/

@@ -130,7 +130,7 @@ typedef struct Material
     // Roughness calculated from anisotropic param
     float       ax;
     float       ay;
-} Material;
+} MaterialUniform;
 
 typedef struct {
     
@@ -170,6 +170,7 @@ typedef struct {
     simd_float3         cameraLookAt;
     float               cameraFov;
     
+    int                 numberOfPoints;    
 } PointCloudUniform;
 
 typedef struct {
@@ -233,7 +234,7 @@ typedef struct {
     simd_float3         size;
     float               rounding;
             
-    Material            material;
+    MaterialUniform     material;
     
     float               repDistance;
     simd_float3         repLowerLimit;

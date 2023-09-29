@@ -1726,9 +1726,22 @@ kernel void renderAccum(constant AccumUniform                       &accumData [
     finalTexture.write(final, gid);
 }
 
+// sphere of size ra centered at point ce,https://iquilezles.org/articles/intersectors/
+float2 sphIntersect(float3 ro, float3 rd, float3 ce, float ra )
+{
+    float3 oc = ro - ce;
+    float b = dot( oc, rd );
+    float c = dot( oc, oc ) - ra*ra;
+    float h = b*b - c;
+    if( h<0.0 ) return float2(-1.0); // no intersection
+    h = sqrt( h );
+    return float2( -b-h, -b+h );
+}
+
 // MARK: PointCloud Entry Point
 kernel void pointCloud(constant PointCloudUniform                  &renderData [[ buffer(0) ]],
                        texture2d<float, access::write>             texture [[texture(1)]],
+                       device float4 *points                       [[ buffer(2) ]],
                        uint2 gid                                   [[thread_position_in_grid]])
 {
     float2 size = float2(texture.get_width(), texture.get_height());
@@ -1740,6 +1753,9 @@ kernel void pointCloud(constant PointCloudUniform                  &renderData [
     
     float4 total = float4(0.0, 0.0, 0.0, 0.0);
     int aa = 2;
+    
+    float closestDistace = INFINITY;
+    int closestIndex = 0;
     
     for( int m=0; m<aa; m++ ) {
         for( int n=0; n<aa; n++ ) {
@@ -1760,8 +1776,23 @@ kernel void pointCloud(constant PointCloudUniform                  &renderData [
             
             float2 bbox = boxIntersection(ray.origin, ray.direction, float3(r, r, r), rectNormal);
             
-            if (bbox.y > 0.0) {
-                color.x = 1.0;
+            if (bbox.y >= 0.0) {
+                color.xyz += 0.1;
+                color.w = 1.0;
+            
+                for (int i = 0; i < renderData.numberOfPoints; i += 1) {
+                    int index = i * 2;
+                    
+                    float2 rc = sphIntersect(ray.origin, ray.direction, points[index].xyz, 0.03);
+                    if ( rc.x >= 0.0 && rc.x < closestDistace) {
+                        closestDistace = rc.x;
+                        closestIndex = index;
+                    }
+                }
+            }
+            
+            if (closestDistace < INFINITY) {
+                color.xyz = points[closestIndex + 1].xyz;
                 color.w = 1.0;
             }
             
@@ -1769,10 +1800,8 @@ kernel void pointCloud(constant PointCloudUniform                  &renderData [
         }
     }
     
-    total /= float(aa*aa);
-    if (total.w > 0.0) {
-        total.w = 1.0;
-    }
+    total.xyz /= float(aa*aa);
+    total.w = clamp(total.w, 0.0, 1.0);
     
     texture.write(total, gid);
 }

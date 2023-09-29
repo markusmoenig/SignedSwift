@@ -80,6 +80,7 @@ class Model: NSObject, ObservableObject {
     
     /// Custom render size
     var renderSize                          : SIMD2<Int>? = nil
+    var renderIsMain                        : Bool = true
     
     /// Maps point ids in the model texture to the points uuids
     var pointMap                            : [Float: UUID] = [:]
@@ -131,7 +132,9 @@ class Model: NSObject, ObservableObject {
     func build() {
         
         var id : Float = 0.01
-        pointMap = [:]
+        if renderIsMain {
+            pointMap = [:]
+        }
         
         print("build")
         
@@ -173,21 +176,21 @@ class Model: NSObject, ObservableObject {
                 }
             }
             
-            cmd.material.data.set("color", float3(shape.material!.red, shape.material!.green, shape.material!.blue))
-            
-            cmd.material.data.set("subsurface", shape.material!.subsurface)
-            cmd.material.data.set("metallic", shape.material!.metallic)
-            cmd.material.data.set("specular", shape.material!.specular)
-            cmd.material.data.set("specularTint", shape.material!.specularTint)
-            cmd.material.data.set("roughness", shape.material!.roughness)
-            cmd.material.data.set("anisotropic", shape.material!.anisotropic)
-            cmd.material.data.set("sheen", shape.material!.sheen)
-            cmd.material.data.set("sheenTint", shape.material!.sheenTint)
-            cmd.material.data.set("clearcoat", shape.material!.clearcoat)
-            cmd.material.data.set("clearcoatGloss", shape.material!.clearcoatGloss)
-            cmd.material.data.set("transmission", shape.material!.transmission)
-            cmd.material.data.set("ior", shape.material!.ior)
-            cmd.material.data.set("emission", float3(repeating: shape.material!.emission))
+//            cmd.material.data.set("color", float3(shape.material!.red, shape.material!.green, shape.material!.blue))
+//            
+//            cmd.material.data.set("subsurface", shape.material!.subsurface)
+//            cmd.material.data.set("metallic", shape.material!.metallic)
+//            cmd.material.data.set("specular", shape.material!.specular)
+//            cmd.material.data.set("specularTint", shape.material!.specularTint)
+//            cmd.material.data.set("roughness", shape.material!.roughness)
+//            cmd.material.data.set("anisotropic", shape.material!.anisotropic)
+//            cmd.material.data.set("sheen", shape.material!.sheen)
+//            cmd.material.data.set("sheenTint", shape.material!.sheenTint)
+//            cmd.material.data.set("clearcoat", shape.material!.clearcoat)
+//            cmd.material.data.set("clearcoatGloss", shape.material!.clearcoatGloss)
+//            cmd.material.data.set("transmission", shape.material!.transmission)
+//            cmd.material.data.set("ior", shape.material!.ior)
+//            cmd.material.data.set("emission", float3(repeating: shape.material!.emission))
 
             if let data = cmd.dataGroups.getGroup("Modifier") {
                 data.set("noise", shape.noise)
@@ -217,7 +220,9 @@ class Model: NSObject, ObservableObject {
 //                    cmd.material.data.set("roughness", 0.5)
 //                    //cmd.material.albedo = float3(p.red, p.green, p.blue)
 //                    modeler?.executeCommand(cmd: cmd, id: id)
-                    pointMap[id] = p.id
+                    if renderIsMain {
+                        pointMap[id] = p.id
+                    }
                 }
                 
                 if project.showShapes {
@@ -232,7 +237,9 @@ class Model: NSObject, ObservableObject {
             
             for l in project.lines?.allObjects as! [Line] {
 
-                pointMap[id] = l.id
+                if renderIsMain {
+                    pointMap[id] = l.id
+                }
 
                 let from = getPoint(l.startPoint)
                 let to = getPoint(l.endPoint)

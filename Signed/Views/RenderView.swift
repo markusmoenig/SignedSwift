@@ -263,7 +263,7 @@ public class SMTKView       : MTKView
         if mode == .Render3D {
             model.setRenderView(self)
         } else
-        if mode == .Points2D {
+        if mode == .Points3D {
             model.setPointsView(self)
         }
 

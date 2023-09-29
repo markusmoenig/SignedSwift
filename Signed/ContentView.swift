@@ -20,7 +20,16 @@ struct ContentView: View {
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Project.index, ascending: true)],
         animation: .default)
-    private var projects: FetchedResults<Project>
+    
+    private var projects                    : FetchedResults<Project>
+    
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Material.index, ascending: true)],
+        animation: .default)
+    
+    private var materials                   : FetchedResults<Material>
+
+    @State private var addPopover           : Bool = false
 
     var body: some View {
         
@@ -29,13 +38,23 @@ struct ContentView: View {
             List {
                 ForEach(projects) { project in
                     NavigationLink {
-                        MainView(model: model, project: project)
+                        SceneView(model: model, project: project)
                     } label: {
                         Text(project.name!)
                     }
                 }
                 .onDelete(perform: deleteProjects)
+                
+                ForEach(materials) { material in
+                    NavigationLink {
+                        //MainView(model: model, project: project)
+                    } label: {
+                        Text(material.name!)
+                    }
+                }
+                .onDelete(perform: deleteMaterials)
             }
+                        
             #if os(iOS)
             .listStyle(PlainListStyle())
             #endif
@@ -45,9 +64,16 @@ struct ContentView: View {
                     EditButton()
                 }
             #endif
-                ToolbarItem {
-                    Button(action: newProject) {
-                        Label("New Project", systemImage: "plus")
+                ToolbarItemGroup {
+                    Button(action: {
+                        newProject()
+                    }) {
+                        Label("New Scene", systemImage: "plus")
+                    }
+                    Button(action: {
+                        newMaterial()
+                    }) {
+                        Label("New Scene", systemImage: "swatchpalette")
                     }
                 }
             }
@@ -69,11 +95,31 @@ struct ContentView: View {
         withAnimation {
             
             let newProject = Project(context: viewContext)
-            newProject.name = "New Project"
+            newProject.name = "New Scene"
             newProject.id = UUID()
             newProject.showPoints = true
             newProject.showShapes = true
             newProject.render = false
+
+            do {
+                try viewContext.save()
+            } catch {
+                let nsError = error as NSError
+                print("Cannot create project", nsError)
+            }
+        }
+    }
+    
+    private func newMaterial() {
+        withAnimation {
+            
+            let newMaterial = Material(context: viewContext)
+            newMaterial.name = "New Material"
+            newMaterial.id = UUID()
+            newMaterial.red = 0.5
+            newMaterial.green = 0.5
+            newMaterial.blue = 0.5
+            newMaterial.roughness = 0.5
 
             do {
                 try viewContext.save()
@@ -92,7 +138,20 @@ struct ContentView: View {
                 try viewContext.save()
             } catch {
                 let nsError = error as NSError
-                print("Cannot delet projects", nsError)
+                print("Cannot delete projects", nsError)
+            }
+        }
+    }
+    
+    private func deleteMaterials(offsets: IndexSet) {
+        withAnimation {
+            offsets.map { materials[$0] }.forEach(viewContext.delete)
+            
+            do {
+                try viewContext.save()
+            } catch {
+                let nsError = error as NSError
+                print("Cannot delete materials", nsError)
             }
         }
     }

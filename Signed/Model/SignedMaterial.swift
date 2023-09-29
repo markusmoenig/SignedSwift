@@ -60,8 +60,8 @@ class SignedMaterial: Codable {
         try container.encode(data, forKey: .data)
     }
     
-    func toMaterialStruct() -> Material {
-        var material = Material()
+    func toMaterialStruct() -> MaterialUniform {
+        var material = MaterialUniform()
         
         material.albedo = data.getFloat3("color")
         material.specular = data.getFloat("specular")
