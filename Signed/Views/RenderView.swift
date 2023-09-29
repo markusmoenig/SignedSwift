@@ -16,11 +16,11 @@ public class SMTKView       : MTKView
     }
     
     enum Mode {
-        case Points2D
+        case Points3D
         case Render3D
     }
     
-    var mode                : Mode = .Points2D
+    var mode                : Mode = .Render3D
     var axis                : Axis = .XY
     
     var pointRadius         : Float = 10.0
@@ -69,9 +69,16 @@ public class SMTKView       : MTKView
                 drawables?.encodeEnd()
             }
         } else
-        if mode == .Points2D {
-            if drawables?.encodeStart(float4(0.1,0.1,0.1,1.0)) != nil {
+        if mode == .Points3D {
+            if drawables?.encodeStart(float4(0.0,0.0,0.0,0.0)) != nil {
                 
+                model.renderer?.renderPointCloud(width: Int(drawables!.metalView.frame.width), height: Int(drawables!.metalView.frame.height))
+                if let texture = model.renderer?.pointCloudTexture {
+                    
+                    drawables?.drawBox(position: float2(0,0), size: float2(Float(texture.width), Float(texture.height)), rounding: 0, borderSize: 0, onion: 0, fillColor: float4(0,0,0,1), borderColor: float4(0,0,0,0), texture: texture)
+                }
+                
+                /*
                 if let points = model.currProject?.points {
                     
                     for p in points.allObjects as! [Point] {
@@ -89,7 +96,7 @@ public class SMTKView       : MTKView
                         
                         drawables?.drawDisk(position: float2(x, y), radius: pointRadius, borderSize: borderSize, fillColor: float4(p.red, p.green, p.blue, 1.0), borderColor: float4(1, 1, 1, 1))
                     }
-                }
+                }*/
                 
                 drawables?.encodeEnd()
             }
@@ -106,7 +113,7 @@ public class SMTKView       : MTKView
         if mode == .Render3D {
             model.setRenderView(self)
         } else
-        if mode == .Points2D {
+        if mode == .Points3D {
             model.setPointsView(self)
         }
 

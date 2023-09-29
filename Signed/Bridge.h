@@ -164,6 +164,15 @@ typedef struct {
 } RenderUniform;
 
 typedef struct {
+    simd_float3         randomVector;
+
+    simd_float3         cameraOrigin;
+    simd_float3         cameraLookAt;
+    float               cameraFov;
+    
+} PointCloudUniform;
+
+typedef struct {
     float               samples;
 } AccumUniform;
 
@@ -250,6 +259,5 @@ typedef struct {
     float               blendSmoothing;
 
 } ModelerUniform;
-
 
 #endif /* Metal_h */

@@ -58,6 +58,8 @@ class RenderPipeline
     var iconRenderKit   : RenderKit
     
     //var iconBuilder     : SignedBuilder
+    
+    var pointCloudTexture : MTLTexture? = nil
         
     init(_ model: Model)
     {
@@ -310,12 +312,59 @@ class RenderPipeline
     
     /// Installs the next shape icon command
     func installNextShapeIconCmd(_ cmd: SignedCommand?) {
-        if let cmd = cmd {
+        if let _ = cmd {
             //model.iconCmd = cmd//.copy()!
             model.modeler?.clear(model.modeler?.iconKit)
         } //else {
 //            model.iconCmd.action = .None
 //        }
+    }
+    
+    // Point Cloud rendering
+    
+    func renderPointCloud(width: Int, height: Int) {
+        
+        if pointCloudTexture == nil || pointCloudTexture!.width != width || pointCloudTexture!.height != height{
+            pointCloudTexture = allocateTexture2D(width: width, height: height)
+        }
+        
+        startCompute()
+        
+        if let computeEncoder = commandBuffer?.makeComputeCommandEncoder() {
+            
+            if let state = renderStates.getComputeState(stateName: "pointCloud") {
+                
+                computeEncoder.setComputePipelineState( state )
+                
+                //var renderUniforms = createRenderUniform(kit: kit)
+                //computeEncoder.setBytes(&renderUniforms, length: MemoryLayout<RenderUniform>.stride, index: 0)
+                
+                //                if kit.role == .main {
+                //                    var modelerUniform = ModelerUniform()
+                //                    modelerUniform.actionType = 0
+                //                    computeEncoder.setBytes(&modelerUniform, length: MemoryLayout<ModelerUniform>.stride, index: 1)
+                //                } else {
+                ////                    var modelerUniform = model.modeler?.createModelerUniform(model.iconCmd, kit: kit, forPreview: true)
+                ////                    computeEncoder.setBytes(&modelerUniform, length: MemoryLayout<ModelerUniform>.stride, index: 1)
+                //                }
+                //              
+                
+                var pointCloudUniform = PointCloudUniform()
+                
+                pointCloudUniform.cameraOrigin = model.project.camera.getPosition()
+                pointCloudUniform.cameraLookAt = model.project.camera.getLookAt()
+                pointCloudUniform.cameraFov = model.project.camera.getFov()
+                
+                computeEncoder.setBytes(&pointCloudUniform, length: MemoryLayout<PointCloudUniform>.stride, index: 0)
+
+                computeEncoder.setTexture(pointCloudTexture!, index: 1)
+                calculateThreadGroups(state, computeEncoder, pointCloudTexture!)
+            }
+                
+            computeEncoder.endEncoding()
+        }
+            
+        stopCompute(waitUntilCompleted: true)
     }
     
     /// Starts compute operation

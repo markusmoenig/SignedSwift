@@ -793,6 +793,56 @@ float3 getCamerayRay(float2 uv, float3 ro, float3 rd, float fov, float2 size, th
     return finalRayDir;
 }
 
+float3 getCamerayRay2(float2 uv, float3 ro, float3 rd, float fov, float2 size, float2 offset) {
+
+    float3 position = ro;
+    float3 pivot = rd;
+    
+    float focalDist = 0.1;
+    float aperture = 0;
+    
+    float3 dir = normalize(pivot - position);
+    float pitch = asin(dir.y);
+    float yaw = atan2(dir.z, dir.x);
+
+    float radius = distance(position, pivot);
+
+    float3 forward_temp = float3();
+    
+    forward_temp.x = cos(yaw) * cos(pitch);
+    forward_temp.y = sin(pitch);
+    forward_temp.z = sin(yaw) * cos(pitch);
+
+    float3 worldUp = float3(0,1,0);
+    float3 forward = normalize(forward_temp);
+    position = pivot + (forward * -1.0) * radius;
+
+    float3 right = normalize(cross(forward, worldUp));
+    float3 up = normalize(cross(right, forward));
+
+    float2 r2D = 2.0 * offset;
+
+    float2 jitter = float2();
+    jitter.x = r2D.x < 1.0 ? sqrt(r2D.x) - 1.0 : 1.0 - sqrt(2.0 - r2D.x);
+    jitter.y = r2D.y < 1.0 ? sqrt(r2D.y) - 1.0 : 1.0 - sqrt(2.0 - r2D.y);
+
+    jitter /= (size * 0.5);
+    float2 d = (2.0 * uv - 1.0) + jitter;
+
+    float scale = tan(fov * 0.5);
+    d.y *= size.y / size.x * scale;
+    d.x *= scale;
+    float3 rayDir = normalize(d.x * right + d.y * up + forward);
+
+    float3 focalPoint = focalDist * rayDir;
+    float cam_r1 = offset.x * M_2_PI_F;
+    float cam_r2 = offset.y * aperture;
+    float3 randomAperturePos = (cos(cam_r1) * right + sin(cam_r1) * up) * sqrt(cam_r2);
+    float3 finalRayDir = normalize(focalPoint - randomAperturePos);
+    
+    return finalRayDir;
+}
+
 float applyModelerData(float3 uv, float dist, constant ModelerUniform &mData, float scal, thread float &materialMixValue);
 void computeModelerMaterial(float3 uv, constant ModelerUniform &mData, float scale, thread Material &material, float globalMaterialScale);
 Material mixMaterials(Material materialA, Material materialB, float k);
@@ -1676,3 +1726,53 @@ kernel void renderAccum(constant AccumUniform                       &accumData [
     finalTexture.write(final, gid);
 }
 
+// MARK: PointCloud Entry Point
+kernel void pointCloud(constant PointCloudUniform                  &renderData [[ buffer(0) ]],
+                       texture2d<float, access::write>             texture [[texture(1)]],
+                       uint2 gid                                   [[thread_position_in_grid]])
+{
+    float2 size = float2(texture.get_width(), texture.get_height());
+    float2 uv = float2(gid) / size;
+    
+    float3 ro = renderData.cameraOrigin;
+    float3 rd = renderData.cameraLookAt;
+    float scale = 1.0;
+    
+    float4 total = float4(0.0, 0.0, 0.0, 0.0);
+    int aa = 2;
+    
+    for( int m=0; m<aa; m++ ) {
+        for( int n=0; n<aa; n++ ) {
+            float2 o = float2(float(m),float(n)) / float(aa) - 0.5;
+            
+            struct DataIn dataIn;
+            
+            dataIn.seed = uv;
+            dataIn.randomVector = float3(0.5);
+                        
+            Ray ray;
+            ray.origin = ro;
+            ray.direction = getCamerayRay2(uv, ro, rd, renderData.cameraFov, size, o);
+            
+            float r = 0.5 * scale; float3 rectNormal;
+            
+            float4 color = float4(0.0, 0.0, 0.0, 0.0);
+            
+            float2 bbox = boxIntersection(ray.origin, ray.direction, float3(r, r, r), rectNormal);
+            
+            if (bbox.y > 0.0) {
+                color.x = 1.0;
+                color.w = 1.0;
+            }
+            
+            total += color;
+        }
+    }
+    
+    total /= float(aa*aa);
+    if (total.w > 0.0) {
+        total.w = 1.0;
+    }
+    
+    texture.write(total, gid);
+}

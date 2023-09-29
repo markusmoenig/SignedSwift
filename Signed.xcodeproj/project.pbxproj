@@ -38,6 +38,7 @@
 		DD729C442AB8862500D8F6F2 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD729C432AB8862500D8F6F2 /* MainView.swift */; };
 		DDAE88FD2AC42CB900A2200D /* LineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDAE88FC2AC42CB900A2200D /* LineView.swift */; };
 		DDAE88FF2AC58B3600A2200D /* InputViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDAE88FE2AC58B3600A2200D /* InputViews.swift */; };
+		DDAE89012AC6692200A2200D /* ModelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDAE89002AC6692200A2200D /* ModelView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -76,6 +77,7 @@
 		DD729C432AB8862500D8F6F2 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		DDAE88FC2AC42CB900A2200D /* LineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineView.swift; sourceTree = "<group>"; };
 		DDAE88FE2AC58B3600A2200D /* InputViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputViews.swift; sourceTree = "<group>"; };
+		DDAE89002AC6692200A2200D /* ModelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -144,6 +146,7 @@
 				DD5E0FC62ABFF40F00836326 /* ShapeView.swift */,
 				DDAE88FC2AC42CB900A2200D /* LineView.swift */,
 				DD3CBAFE2ABA67EE0076D058 /* Sidebar.swift */,
+				DDAE89002AC6692200A2200D /* ModelView.swift */,
 				DD729C432AB8862500D8F6F2 /* MainView.swift */,
 			);
 			path = Views;
@@ -288,6 +291,7 @@
 				DD729C3A2AB864B300D8F6F2 /* SignedData.swift in Sources */,
 				DD729C1F2AB83E7200D8F6F2 /* Drawables.metal in Sources */,
 				DD729C1C2AB83BF300D8F6F2 /* Model.swift in Sources */,
+				DDAE89012AC6692200A2200D /* ModelView.swift in Sources */,
 				DD729C192AB83A9400D8F6F2 /* RenderView.swift in Sources */,
 				DD729C082AB836FB00D8F6F2 /* Signed.xcdatamodeld in Sources */,
 				DD729C212AB83E7B00D8F6F2 /* Drawables.swift in Sources */,

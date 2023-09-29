@@ -44,7 +44,7 @@ class RenderStates {
             computeStates["renderBSDF"] = createComputeState(name: "renderBSDF")
             computeStates["renderPBR"] = createComputeState(name: "renderPBR")
             computeStates["renderAccum"] = createComputeState(name: "renderAccum")
-            //states["render"] = createQuadState(name: "render")
+            computeStates["pointCloud"] = createComputeState(name: "pointCloud")
         }
     }
     

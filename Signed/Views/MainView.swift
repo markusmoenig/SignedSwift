@@ -1,5 +1,5 @@
 //
-//  PreviewView.swift
+//  MainView.swift
 //  Signed
 //
 //  Created by Markus Moenig on 18/9/23.
@@ -111,6 +111,11 @@ struct MainView: View {
                     .padding(.leading, CGFloat(xOffsetPopup) + 50)
                     .padding(.bottom, geometry.size.height - CGFloat(yOffsetPopup) - 50)
                 }
+                
+                ModelView(model: model, project: project)
+                    .frame(width: 200, height: 200)
+                    .padding(.leading, geometry.size.width - 200)
+                    .padding(.bottom, 0)
                 
                 if selectedPoint == nil && selectedLine == nil {
                     /*
