@@ -40,9 +40,6 @@ class SignedProject: Codable {
     /// Resolution of the 3D texture
     var resolution                          = Int(256)
     
-    /// How many pixels per meter
-    var pixelsPerMeter                      = Int(100)
-    
     /// Project settings data groups
     var dataGroups                          : SignedDataGroups
     
@@ -65,7 +62,6 @@ class SignedProject: Codable {
         camera = try container.decode(SignedPinholeCamera.self, forKey: .camera)
         dataGroups = try container.decode(SignedDataGroups.self, forKey: .dataGroups)
         resolution = try container.decode(Int.self, forKey: .resolution)
-        pixelsPerMeter = try container.decode(Int.self, forKey: .pixelsPerMeter)
         //dataGroups.groups["Renderer"]!.set("Background", float4(0.25, 0.25, 0.25, 1.0))
         if let rendererData = dataGroups.groups["Renderer"] {
             rendererData.removeEntity("background")
@@ -84,7 +80,6 @@ class SignedProject: Codable {
         try container.encode(camera, forKey: .camera)
         try container.encode(dataGroups, forKey: .dataGroups)
         try container.encode(resolution, forKey: .resolution)
-        try container.encode(pixelsPerMeter, forKey: .pixelsPerMeter)
     }
     
     /// Initializes the data groups with default values, or, when already exists, make sure all options are present

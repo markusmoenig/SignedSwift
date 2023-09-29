@@ -37,12 +37,14 @@ struct MainView: View {
     @State private var lineName                         : String = ""
     
     @State private var editPointPopover                 : Bool = false
-
     @State private var editContextPopover               : Bool = false
+    @State private var editSettingsPopover              : Bool = false
 
     @State private var editPointsPopover                : Bool = false
     @State private var editLinesPopover                 : Bool = false
     @State private var editShapesPopover                : Bool = false
+
+    @State private var pathTraceIsOn                    : Bool = false
 
     @State private var pointXValue                      = ""
     @State private var pointYValue                      = ""
@@ -76,6 +78,8 @@ struct MainView: View {
     init(model: Model, project: Project) {
         self.model = model
         self.project = project
+        
+        self._pathTraceIsOn = State(initialValue: project.render)
         
         model.projectChanged.send(project)
     }
@@ -555,75 +559,74 @@ struct MainView: View {
         
         .toolbar {
             
+        
             ToolbarItemGroup(placement: .automatic) {
-                
                 Button(action: {
-                    modelIconColor = .accentColor
-                    renderIconColor = .secondary
-                    project.render = false
-                    save("")
-                    model.renderer?.performRestart()
+                    editSettingsPopover = true
                 }) {
-                    Text("MODEL")
+                    Label("SETTINGS", systemImage: editSettingsPopover ? "gearshape.fill" : "gearshape")
+                        .imageScale(.large)
                 }
-//                .foregroundColor(modelIconColor)
                 .buttonStyle(.borderless)
+                .popover(isPresented: $editSettingsPopover,
+                         arrowEdge: .bottom
+                ) {
+                    VStack(alignment: .leading) {
+                        //Section(header: Text("Render")) {
+                            
+                            Toggle("Pathtrace", isOn: $pathTraceIsOn)
+                                .toggleStyle(.switch)
+                        //}
 
-                Button(action: {
-                    modelIconColor = .secondary
-                    renderIconColor = .accentColor
-                    project.render = true
-                    save("")
-                    model.renderer?.performRestart()
-                }) {
-                    Text("RENDER")
-                }
-//                .foregroundColor(renderIconColor)
-                .buttonStyle(.borderless)
-            }
-            
-            ToolbarItemGroup(placement: .automatic) {
-                
-                Menu(content: {
-                    Section(header: Text("Show")) {
-                        Button("Points & Shapes", action: {
-                            project.showPoints = true
-                            project.showShapes = true
-                            model.rebuild.send()
-                            showText = "Points & Shapes"
-                            save("")
-                        })
-                        .keyboardShortcut("1")
-                        Button("Points Only", action: {
-                            project.showPoints = true
-                            project.showShapes = false
-                            model.rebuild.send()
-                            showText = "Points Only"
-                            save("")
-                        })
-                        .keyboardShortcut("2")
-                        Button("Shapes Only", action: {
-                            project.showPoints = false
-                            project.showShapes = true
-                            model.rebuild.send()
-                            showText = "Shapes Only"
-                            save("")
-                        })
-                        .keyboardShortcut("3")
+                        Spacer()
                     }
-                }, label: {
-                    Text(showText)
-                })
-            }
+                    .padding()
+                    //.frame(width: 200, height: 400)
+                }
             
-            ToolbarItemGroup(placement: .automatic) {
-                
+                Spacer()
+
+            
+                /*
+                ToolbarItemGroup(placement: .automatic) {
+                    
+                    Menu(content: {
+                        Section(header: Text("Show")) {
+                            Button("Points & Shapes", action: {
+                                project.showPoints = true
+                                project.showShapes = true
+                                model.rebuild.send()
+                                showText = "Points & Shapes"
+                                save("")
+                            })
+                            .keyboardShortcut("1")
+                            Button("Points Only", action: {
+                                project.showPoints = true
+                                project.showShapes = false
+                                model.rebuild.send()
+                                showText = "Points Only"
+                                save("")
+                            })
+                            .keyboardShortcut("2")
+                            Button("Shapes Only", action: {
+                                project.showPoints = false
+                                project.showShapes = true
+                                model.rebuild.send()
+                                showText = "Shapes Only"
+                                save("")
+                            })
+                            .keyboardShortcut("3")
+                        }
+                    }, label: {
+                        Text(showText)
+                    })
+                }*/
+                            
                 Button(action: {
                     editPointsPopover = true
                 }) {
-                    Text("POINTS")
+                    Label("POINTS", systemImage: editPointsPopover ? "circle.fill" : "circle")
                 }
-//                .foregroundColor(editPointsPopover ? .accentColor : .secondary)
                 .buttonStyle(.borderless)
                 .popover(isPresented: $editPointsPopover,
                          arrowEdge: .bottom
@@ -697,9 +700,9 @@ struct MainView: View {
                 Button(action: {
                     editLinesPopover = true
                 }) {
-                    Text("LINES")
+                    Label("LINES", systemImage: editLinesPopover ? "line.diagonal" : "line.diagonal")
+                        .imageScale(.large)
                 }
-                //.foregroundColor(editLinesPopover ? .accentColor : .secondary)
                 .buttonStyle(.borderless)
                 .popover(isPresented: $editLinesPopover,
                          arrowEdge: .bottom
@@ -763,10 +766,10 @@ struct MainView: View {
                 Button(action: {
                     editShapesPopover = true
                 }) {
-                    Text("SHAPES")
+                    Label("SHAPES", systemImage: editShapesPopover ? "cube.fill" : "cube")
+                        .imageScale(.large)
                 }
                 .disabled(selectedPoint == nil && selectedLine == nil)
-                //.foregroundColor(editShapesPopover ? .accentColor : .secondary)
                 .buttonStyle(.borderless)
                 .popover(isPresented: $editShapesPopover,
                          arrowEdge: .bottom
@@ -888,27 +891,6 @@ struct MainView: View {
                     .frame(width: 300, height: 600)
                     #endif
                 }
-                /*
-                Button(action: {
-                    pointIconColor = .accentColor
-                    lineIconColor = .secondary
-                }) {
-                    Label("Points", systemImage: "circle.fill")
-                        .imageScale(.large)
-                }
-                .foregroundColor(pointIconColor)
-                .buttonStyle(.borderless)
-                
-                Button(action: {
-                    pointIconColor = .secondary
-                    lineIconColor = .accentColor
-                }) {
-                    Label("Lines", systemImage: "line.diagonal")
-                        .imageScale(.large)
-                }
-                .foregroundColor(lineIconColor)
-                .buttonStyle(.borderless)
-                 */
             }
         }
         #if os(iOS)
@@ -965,6 +947,11 @@ struct MainView: View {
             self.editContextPopover = true
             self.xOffsetPopup = ctx.2
             self.yOffsetPopup = ctx.3
+        }
+        
+        .onChange(of: pathTraceIsOn) { newValue in
+            project.render = newValue
+            model.renderer?.restart()
         }
         
         .onChange(of: pointXValue) { newValue in
