@@ -60,7 +60,7 @@ public class SMTKView       : MTKView
     {
         if mode == .Render3D {
             renderer?.renderSample()
-            if drawables?.encodeStart(float4(0,0,0,1)) != nil {
+            if drawables?.encodeStart(float4(0,0,0,0)) != nil {
                 
                 if let texture = model.renderer?.mainRenderKit.outputTexture {
                     drawables?.drawBox(position: float2(0,0), size: float2(Float(texture.width), Float(texture.height)), rounding: 0, borderSize: 0, onion: 0, fillColor: float4(0,0,0,1), borderColor: float4(0,0,0,0), texture: texture)

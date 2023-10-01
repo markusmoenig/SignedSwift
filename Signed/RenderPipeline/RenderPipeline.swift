@@ -59,7 +59,8 @@ class RenderPipeline
     
     //var iconBuilder     : SignedBuilder
     
-    var pointCloudTexture : MTLTexture? = nil
+    var pointCloudTexture: MTLTexture? = nil
+    var hdriTexture     : MTLTexture? = nil
         
     init(_ model: Model)
     {
@@ -85,6 +86,10 @@ class RenderPipeline
         }
         
 //        iconBuilder = SignedBuilder(model)
+        
+        if let exrURL = Bundle.main.url(forResource: "kloofendal_48d_partly_cloudy_puresky_4k", withExtension:"exr") {
+            hdriTexture = loadEXRTexture(exrURL, device: device)
+        }
     }
     
     /// Restarts the path tracer
@@ -442,6 +447,10 @@ class RenderPipeline
                 computeEncoder.setTexture(kit.materialTexture3, index: 6)
                 computeEncoder.setTexture(kit.materialTexture4, index: 7)
                 
+                if let hdriTexture = hdriTexture {
+                    computeEncoder.setTexture(hdriTexture, index: 9)
+                }
+                
                 if let renderKit = kit.currentRenderKit {
                     computeEncoder.setTexture(renderKit.sampleTexture, index: 8)
                     calculateThreadGroups(state, computeEncoder, renderKit.sampleTexture!)
@@ -698,6 +707,52 @@ class RenderPipeline
         #else
         model.renderView?.setNeedsDisplay()
         #endif
+    }
+    
+    // HDRI loader based on
+    // https://stackoverflow.com/questions/48872043/how-to-load-16-bit-images-into-metal-textures
+    
+    func convertRGBF32ToRGBAF16(_ src: UnsafePointer<Float>, _ dst: UnsafeMutablePointer<UInt16>, pixelCount: Int) {
+        for i in 0..<pixelCount {
+            storeAsF16(src[i * 4 + 0], dst + (i * 4) + 0)
+            storeAsF16(src[i * 4 + 1], dst + (i * 4) + 1)
+            storeAsF16(src[i * 4 + 2], dst + (i * 4) + 2)
+            storeAsF16(src[i * 4 + 3], dst + (i * 4) + 3)
+//            storeAsF16(1.0, dst + (i * 4) + 3)
+        }
+    }
+
+    func loadEXRTexture(_ url: URL, device: MTLDevice) -> MTLTexture? {
+        guard let imageSource = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
+
+        let options = [ kCGImageSourceShouldCache : true, kCGImageSourceShouldAllowFloat : true ] as CFDictionary
+        guard let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options) else { return nil }
+
+        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba16Float,
+                                                                  width: image.width,
+                                                                  height: image.height,
+                                                                  mipmapped: false)
+        descriptor.usage = .shaderRead
+        guard let texture = device.makeTexture(descriptor: descriptor) else { return nil }
+
+        print(image.bitsPerPixel);
+
+        if image.bitsPerComponent == 32 && image.bitsPerPixel == 128 {
+            let srcData: CFData! = image.dataProvider?.data
+
+            CFDataGetBytePtr(srcData).withMemoryRebound(to: Float.self, capacity: image.width * image.height * 4) { srcPixels in
+                let dstPixels = UnsafeMutablePointer<UInt16>.allocate(capacity: 4 * image.width * image.height)
+
+                convertRGBF32ToRGBAF16(srcPixels, dstPixels, pixelCount: image.width * image.height)
+                texture.replace(region: MTLRegionMake2D(0, 0, image.width, image.height),
+                                mipmapLevel: 0,
+                                withBytes: dstPixels,
+                                bytesPerRow: MemoryLayout<UInt16>.size * 4 * image.width)
+                dstPixels.deallocate()
+            }
+        }
+
+        return texture
     }
     
     /// Allocate a texture of the given size

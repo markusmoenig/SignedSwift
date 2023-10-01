@@ -8,7 +8,7 @@
 #include <metal_stdlib>
 using namespace metal;
 
-#import "../Bridge.h"
+#import "../Metal.h"
 
 // Precision-adjusted variations of https://www.shadertoy.com/view/4djSRW
 float hash(float p) { p = fract(p * 0.011); p *= p + 7.5; p *= p + p; return fract(p); }

@@ -8,7 +8,7 @@
 #include <metal_stdlib>
 using namespace metal;
 
-#import "../Bridge.h"
+#import "../Metal.h"
 
 // For the visual bounding box of the 3D texture
 // Box Frame - exact   (https://www.shadertoy.com/view/3ljcRh)
@@ -1053,6 +1053,16 @@ float3 DirectLight(Ray ray, State state, thread DataIn &dataIn, constant RenderU
     return Li;
 }
 
+float Luminance(float3 c) {
+    return 0.212671 * c.x + 0.715160 * c.y + 0.072169 * c.z;
+}
+
+float PowerHeuristic(float a, float b)
+{
+    float t = a * a;
+    return t / (b * b + t);
+}
+
 // MARK: Render Entry Point
 kernel void renderBSDF(        constant RenderUniform               &renderData [[ buffer(0) ]],
                                constant ModelerUniform              &mData [[ buffer(1) ]],
@@ -1063,6 +1073,7 @@ kernel void renderBSDF(        constant RenderUniform               &renderData 
                                texture3d<float, access::read_write> materialTexture3 [[ texture(6) ]],
                                texture3d<float, access::read_write> materialTexture4 [[ texture(7) ]],
                                texture2d<float, access::write>      sampleTexture [[ texture(8) ]],
+                               texture2d<float, access::read>       hdriTexture [[ texture(9) ]],
                                uint2 gid                            [[thread_position_in_grid]])
 
 {
@@ -1222,18 +1233,48 @@ kernel void renderBSDF(        constant RenderUniform               &renderData 
         }*/
         
         if (t == INFINITY) {
-            if (true) {
-                radiance += pow(renderData.backgroundColor.xyz, 2.2) * throughput;
-                if (didHitBBox && renderData.showBBox) radiance += float3(0.01, 0.01, 0.01);
-            } else {
-                float cSize = 2;
+            
+            if (state.depth > 0) {
+
+                #define INV_PI     0.31830988618379067
+                #define INV_TWO_PI 0.15915494309189533
                 
-                if ( fmod( floor( uv.x * 100 / cSize ), 2.0 ) == 0.0 ) {
-                    if ( fmod( floor( uv.y * 100 / cSize ), 2.0 ) != 0.0 ) radiance += float3(0) * throughput;
+                float theta = acos(clamp(ray.direction.y, -1.0, 1.0));
+                float2 uv = float2((PI + atan2(ray.direction.z, ray.direction.x)) * INV_TWO_PI, theta * INV_PI); //+ float2(envMapRot, 0.0);
+                
+                uv *= float2(hdriTexture.get_width(), hdriTexture.get_height());
+                             
+                float3 color = hdriTexture.read(ushort2(uv)).rgb;//texture(envMapTex, uv).rgb;
+                float pdf = Luminance(color);// / envMapTotalSum;
+                
+                float4 envMapColPdf = float4(color, (pdf /* * hdriTexture.get_width() *  hdriTexture.get_height())*/ / (M_2_PI_F * M_PI_F * sin(theta))));
+                
+                float misWeight = 1.0;
+
+                // Gather radiance from envmap and use scatterSample.pdf from previous bounce for MIS
+                misWeight = PowerHeuristic(bsdfSampleRec.pdf, envMapColPdf.w);
+                
+                if(misWeight > 0)
+                    radiance +=  pow(misWeight * envMapColPdf.rgb * throughput * 1.0, 2.2);// * envMapIntensity;
+            } else {
+
+                if (false) {
+                    #define INV_PI     0.31830988618379067
+                    #define INV_TWO_PI 0.15915494309189533
+                    
+                    float theta = acos(clamp(ray.direction.y, -1.0, 1.0));
+                    float2 uv = float2((PI + atan2(ray.direction.z, ray.direction.x)) * INV_TWO_PI, theta * INV_PI); //+ float2(envMapRot, 0.0);
+                    
+                    uv *= float2(hdriTexture.get_width(), hdriTexture.get_height());
+                    
+                    float3 color = hdriTexture.read(ushort2(uv)).rgb;
+                    radiance = color;
                 } else {
-                    if ( fmod( floor( uv.y * 100 / cSize ), 2.0 ) == 0.0 ) radiance += float3(1) * throughput;
+                    radiance += pow(renderData.backgroundColor.xyz, 2.2) * throughput;
                 }
+                if (didHitBBox && renderData.showBBox) radiance += float3(0.01, 0.01, 0.01);
             }
+            
             sampleTexture.write(float4(radiance, renderData.backgroundColor.w), gid);
             return;
         }

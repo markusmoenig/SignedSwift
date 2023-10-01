@@ -216,7 +216,7 @@ class Model: NSObject, ObservableObject {
                 }
             }
             
-            if let material = getMaterial(shape.material) {
+            if let material = getMaterial(shape.material) {                
                 setMaterial(cmd: cmd, material: material)
             }
 

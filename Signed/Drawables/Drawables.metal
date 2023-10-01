@@ -8,7 +8,7 @@
 #include <metal_stdlib>
 using namespace metal;
 
-#import "../Bridge.h"
+#import "../Metal.h"
 
 typedef struct
 {
