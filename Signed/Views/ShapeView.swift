@@ -20,7 +20,7 @@ struct ShapeView: View {
     let model                               : Model
     var project                             : Project
     let shape                               : Shape
-    
+        
     let nameWidth                           : CGFloat = 70
     
     @State var shapeName                    : String
@@ -46,23 +46,24 @@ struct ShapeView: View {
     @State var cutOffValue                  : Float = 0
     @State var cutOffValueText              : String = ""
     
+    @State var materialId                   : UUID? = nil
     
     init(model: Model, project: Project, shape: Shape) {
         
         self.model = model
         self.project = project
         self.shape = shape
-        
+                
         if shape.shapeName == nil {
             shape.shapeName = "Sphere"
         }
-        shapeName = shape.shapeName!
+        self._shapeName = State(initialValue: shape.shapeName!)
         
         if shape.blendModeName == nil {
             shape.blendModeName = "Add"
             shape.smoothing = 0.0
         }
-        blendModeName = shape.blendModeName!
+        self._blendModeName = State(initialValue: shape.blendModeName!)
         
         if shape.shapeName == "Sphere" {
             self._radiusValue = State(initialValue: shape.radius)
@@ -210,9 +211,16 @@ struct ShapeView: View {
                      arrowEdge: .leading
             ) {
                 VStack(alignment: .leading) {
-                    //MaterialView(model: model, project: project, shape: shape)
+                    MaterialPicker(model: model, id: $materialId)
                 }
             }
+            .onChange(of: materialId, perform: { value in
+                if materialId != shape.material {
+                    shape.material = materialId
+                    model.build()
+                    save("material")
+                }
+            })
                 
             //Text("Modifier")
             //.bold()

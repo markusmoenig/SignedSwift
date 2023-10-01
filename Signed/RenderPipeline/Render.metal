@@ -1224,7 +1224,7 @@ kernel void renderBSDF(        constant RenderUniform               &renderData 
         if (t == INFINITY) {
             if (true) {
                 radiance += pow(renderData.backgroundColor.xyz, 2.2) * throughput;
-                if (didHitBBox) radiance += float3(0.01, 0.01, 0.01);
+                if (didHitBBox && renderData.showBBox) radiance += float3(0.01, 0.01, 0.01);
             } else {
                 float cSize = 2;
                 
@@ -1522,9 +1522,8 @@ kernel void renderPBR(         constant RenderUniform               &renderData 
     
     if (t == INFINITY) {
         radiance += pow(renderData.backgroundColor.xyz, 2.2);
-        if (didHitBBox) {
-            radiance += pow(renderData.backgroundColor.xyz, 2.2);
-            radiance += float3(0.001, 0.001, 0.001);
+        if (didHitBBox && renderData.showBBox) {
+            radiance += float3(0.01, 0.01, 0.01);
         }
         /*
         else {

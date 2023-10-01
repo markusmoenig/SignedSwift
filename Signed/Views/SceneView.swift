@@ -48,6 +48,7 @@ struct SceneView: View {
     @State private var showSideKick                     : Bool = true
 
     @State private var pathTraceIsOn                    : Bool = false
+    @State private var bboxIsOn                         : Bool = true
 
     @State private var pointXValue                      = ""
     @State private var pointYValue                      = ""
@@ -82,9 +83,8 @@ struct SceneView: View {
         self.model = model
         self.project = project
         
-        self._pathTraceIsOn = State(initialValue: project.render)
-        
-        model.projectChanged.send(project)
+        self._pathTraceIsOn = State(initialValue: project.trace)
+        self._bboxIsOn = State(initialValue: project.bbox)
     }
     
     var body: some View {
@@ -615,14 +615,17 @@ struct SceneView: View {
                     VStack(alignment: .leading) {
                         //Section(header: Text("Render")) {
                             
-                            Toggle("Pathtrace", isOn: $pathTraceIsOn)
+                            Toggle("BSDF Pathtrace", isOn: $pathTraceIsOn)
+                                .toggleStyle(.switch)
+                        
+                            Toggle("Show Bounding Box", isOn: $bboxIsOn)
                                 .toggleStyle(.switch)
                         //}
 
                         Spacer()
                     }
                     .padding()
-                    //.frame(width: 200, height: 400)
+                    .frame(width: 250, height: 400)
                 }
             
                 Spacer()
@@ -927,7 +930,7 @@ struct SceneView: View {
         #endif
         
         .onReceive(model.projectChanged) { project in
-            if project?.render == true {
+            if project?.trace == true {
                 modelIconColor = .secondary
                 renderIconColor = .accentColor
             } else {
@@ -979,8 +982,15 @@ struct SceneView: View {
         }
         
         .onChange(of: pathTraceIsOn) { newValue in
-            project.render = newValue
+            project.trace = newValue
             model.renderer?.restart()
+            save("pathtrace")
+        }
+        
+        .onChange(of: bboxIsOn) { newValue in
+            project.bbox = newValue
+            model.renderer?.restart()
+            save("bbox")
         }
         
         .onChange(of: pointXValue) { newValue in

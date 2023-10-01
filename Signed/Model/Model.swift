@@ -46,6 +46,7 @@ class Model: NSObject, ObservableObject {
     var project                             : SignedProject
         
     var currProject                         : Project? = nil
+    var currMaterial                        : Material? = nil
 
     /// Send when the camera mode changed
     let cameraModeChanged                   = PassthroughSubject<ModelerKit.Content, Never>()
@@ -61,8 +62,11 @@ class Model: NSObject, ObservableObject {
     /// Send when modelling is finished
     let modellingEnded                      = PassthroughSubject<Void, Never>()
     
-    /// The rpoject changed
+    /// The project changed
     let projectChanged                      = PassthroughSubject<Project?, Never>()
+    
+    /// The project changed
+    let materialChanged                      = PassthroughSubject<Material?, Never>()
     
     /// Current point changed
     let pointChanged                        = PassthroughSubject<Point?, Never>()
@@ -128,6 +132,24 @@ class Model: NSObject, ObservableObject {
         return nil
     }
     
+    /// Returns the material of the given id
+    func getMaterial(_ id: UUID?) -> Material? {
+        if id == nil { return nil }
+        
+        let request = Material.fetchRequest()
+        
+        let managedObjectContext = PersistenceController.shared.container.viewContext
+        let materials = try! managedObjectContext.fetch(request)
+        
+        for material in materials {
+            if material.id == id {
+                return material
+            }
+        }
+
+        return nil
+    }
+    
     /// Build the project, i.e. model the project state
     func build() {
         
@@ -137,6 +159,24 @@ class Model: NSObject, ObservableObject {
         }
         
         print("build")
+        
+        func setMaterial(cmd: SignedCommand, material: Material) {
+            cmd.material.data.set("color", float3(material.red, material.green, material.blue))
+                            
+            cmd.material.data.set("subsurface", material.subsurface)
+            cmd.material.data.set("metallic", material.metallic)
+            cmd.material.data.set("specular", material.specular)
+            cmd.material.data.set("specularTint", material.specularTint)
+            cmd.material.data.set("roughness", material.roughness)
+            cmd.material.data.set("anisotropic", material.anisotropic)
+            cmd.material.data.set("sheen", material.sheen)
+            cmd.material.data.set("sheenTint", material.sheenTint)
+            cmd.material.data.set("clearcoat", material.clearcoat)
+            cmd.material.data.set("clearcoatGloss", material.clearcoatGloss)
+            cmd.material.data.set("transmission", material.transmission)
+            cmd.material.data.set("ior", material.ior)
+            cmd.material.data.set("emission", float3(repeating: material.emission))
+        }
         
         func createCmd(shape: Shape, position: float3, rotation: float3 = float3(0,0,0)) -> SignedCommand {
             var primitive : SignedCommand.Primitive = .Sphere
@@ -176,21 +216,9 @@ class Model: NSObject, ObservableObject {
                 }
             }
             
-//            cmd.material.data.set("color", float3(shape.material!.red, shape.material!.green, shape.material!.blue))
-//            
-//            cmd.material.data.set("subsurface", shape.material!.subsurface)
-//            cmd.material.data.set("metallic", shape.material!.metallic)
-//            cmd.material.data.set("specular", shape.material!.specular)
-//            cmd.material.data.set("specularTint", shape.material!.specularTint)
-//            cmd.material.data.set("roughness", shape.material!.roughness)
-//            cmd.material.data.set("anisotropic", shape.material!.anisotropic)
-//            cmd.material.data.set("sheen", shape.material!.sheen)
-//            cmd.material.data.set("sheenTint", shape.material!.sheenTint)
-//            cmd.material.data.set("clearcoat", shape.material!.clearcoat)
-//            cmd.material.data.set("clearcoatGloss", shape.material!.clearcoatGloss)
-//            cmd.material.data.set("transmission", shape.material!.transmission)
-//            cmd.material.data.set("ior", shape.material!.ior)
-//            cmd.material.data.set("emission", float3(repeating: shape.material!.emission))
+            if let material = getMaterial(shape.material) {
+                setMaterial(cmd: cmd, material: material)
+            }
 
             if let data = cmd.dataGroups.getGroup("Modifier") {
                 data.set("noise", shape.noise)
@@ -274,6 +302,14 @@ class Model: NSObject, ObservableObject {
                 }
                 id += 0.01
             }
+        } else
+        if let material = currMaterial {
+            
+            var cmd = SignedCommand("Sphere", role: .GeometryAndMaterial, action: .Add, primitive: .Sphere, data: ["Geometry": SignedData([SignedDataEntity("radius", Float(0.49), float2(0, 5), .Slider, .None, "Radius of the sphere.")])])
+            
+            setMaterial(cmd: cmd, material: material)
+            
+            modeler?.executeCommand(cmd: cmd, id: 0)
         }
         
         renderer?.restart()

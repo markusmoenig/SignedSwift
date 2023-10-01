@@ -12,8 +12,6 @@ struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
 
     var model                               : Model
-
-    @ObservedObject var currProject         : Project = Project()
     
     @State var updateView                   : Bool = false
 
@@ -47,7 +45,7 @@ struct ContentView: View {
                 
                 ForEach(materials) { material in
                     NavigationLink {
-                        //MainView(model: model, project: project)
+                        MaterialView(model: model, material: material)
                     } label: {
                         Text(material.name!)
                     }
@@ -73,7 +71,8 @@ struct ContentView: View {
                     Button(action: {
                         newMaterial()
                     }) {
-                        Label("New Scene", systemImage: "swatchpalette")
+                        Label("New Scene", systemImage: "circle.badge.plus.fill")
+                            .imageScale(.large)
                     }
                 }
             }
@@ -83,6 +82,12 @@ struct ContentView: View {
         }
         .onReceive(model.projectChanged) { project in
             model.currProject = project
+            model.currMaterial = nil
+            model.build()
+        }
+        .onReceive(model.materialChanged) { material in
+            model.currMaterial = material
+            model.currProject = nil
             model.build()
         }
         .onReceive(model.rebuild) { _ in
@@ -99,7 +104,8 @@ struct ContentView: View {
             newProject.id = UUID()
             newProject.showPoints = true
             newProject.showShapes = true
-            newProject.render = false
+            newProject.trace = true
+            newProject.bbox = true
 
             do {
                 try viewContext.save()
@@ -164,8 +170,3 @@ private let itemFormatter: DateFormatter = {
     return formatter
 }()
 
-//struct ContentView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        ContentView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
-//    }
-//}

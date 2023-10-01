@@ -44,12 +44,13 @@
         <relationship name="shapes" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Shape" inverseName="parent" inverseEntity="Shape"/>
     </entity>
     <entity name="Project" representedClassName="Project" syncable="YES" codeGenerationType="class">
+        <attribute name="bbox" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="index" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="name" optional="YES" attributeType="String"/>
-        <attribute name="render" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="showPoints" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="showShapes" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="trace" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <relationship name="lines" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Line" inverseName="parent" inverseEntity="Line"/>
         <relationship name="points" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Point" inverseName="parent" inverseEntity="Point"/>
     </entity>
@@ -58,6 +59,7 @@
         <attribute name="cutOffX" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="index" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="material" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="noise" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="onion" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>

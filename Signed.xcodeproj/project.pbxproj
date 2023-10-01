@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		DD5E0FC72ABFF40F00836326 /* ShapeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD5E0FC62ABFF40F00836326 /* ShapeView.swift */; };
-		DD5E0FC92AC0209200836326 /* MaterialView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD5E0FC82AC0209200836326 /* MaterialView.swift */; };
+		DD5E0FC92AC0209200836326 /* MaterialSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD5E0FC82AC0209200836326 /* MaterialSettings.swift */; };
 		DD729C032AB836FB00D8F6F2 /* SignedApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD729C022AB836FB00D8F6F2 /* SignedApp.swift */; };
 		DD729C052AB836FB00D8F6F2 /* Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD729C042AB836FB00D8F6F2 /* Persistence.swift */; };
 		DD729C082AB836FB00D8F6F2 /* Signed.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = DD729C062AB836FB00D8F6F2 /* Signed.xcdatamodeld */; };
@@ -38,11 +38,13 @@
 		DDAE88FD2AC42CB900A2200D /* LineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDAE88FC2AC42CB900A2200D /* LineView.swift */; };
 		DDAE88FF2AC58B3600A2200D /* InputViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDAE88FE2AC58B3600A2200D /* InputViews.swift */; };
 		DDAE89012AC6692200A2200D /* PointCloud.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDAE89002AC6692200A2200D /* PointCloud.swift */; };
+		DDAE89032AC7B70300A2200D /* MaterialView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDAE89022AC7B70300A2200D /* MaterialView.swift */; };
+		DDAE89052AC9254700A2200D /* MaterialPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDAE89042AC9254700A2200D /* MaterialPicker.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		DD5E0FC62ABFF40F00836326 /* ShapeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShapeView.swift; sourceTree = "<group>"; };
-		DD5E0FC82AC0209200836326 /* MaterialView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaterialView.swift; sourceTree = "<group>"; };
+		DD5E0FC82AC0209200836326 /* MaterialSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaterialSettings.swift; sourceTree = "<group>"; };
 		DD729BFF2AB836FB00D8F6F2 /* Signed.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Signed.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DD729C022AB836FB00D8F6F2 /* SignedApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignedApp.swift; sourceTree = "<group>"; };
 		DD729C042AB836FB00D8F6F2 /* Persistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Persistence.swift; sourceTree = "<group>"; };
@@ -76,6 +78,8 @@
 		DDAE88FC2AC42CB900A2200D /* LineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineView.swift; sourceTree = "<group>"; };
 		DDAE88FE2AC58B3600A2200D /* InputViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputViews.swift; sourceTree = "<group>"; };
 		DDAE89002AC6692200A2200D /* PointCloud.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PointCloud.swift; sourceTree = "<group>"; };
+		DDAE89022AC7B70300A2200D /* MaterialView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaterialView.swift; sourceTree = "<group>"; };
+		DDAE89042AC9254700A2200D /* MaterialPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaterialPicker.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -140,11 +144,13 @@
 			children = (
 				DDAE88FE2AC58B3600A2200D /* InputViews.swift */,
 				DD729C182AB83A9400D8F6F2 /* RenderView.swift */,
-				DD5E0FC82AC0209200836326 /* MaterialView.swift */,
+				DD5E0FC82AC0209200836326 /* MaterialSettings.swift */,
+				DDAE89042AC9254700A2200D /* MaterialPicker.swift */,
 				DD5E0FC62ABFF40F00836326 /* ShapeView.swift */,
 				DDAE88FC2AC42CB900A2200D /* LineView.swift */,
 				DDAE89002AC6692200A2200D /* PointCloud.swift */,
 				DD729C432AB8862500D8F6F2 /* SceneView.swift */,
+				DDAE89022AC7B70300A2200D /* MaterialView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -265,12 +271,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DDAE89032AC7B70300A2200D /* MaterialView.swift in Sources */,
 				DDAE88FD2AC42CB900A2200D /* LineView.swift in Sources */,
 				DDAE88FF2AC58B3600A2200D /* InputViews.swift in Sources */,
 				DD729C362AB8644500D8F6F2 /* SignedCommand.swift in Sources */,
 				DD729C442AB8862500D8F6F2 /* SceneView.swift in Sources */,
 				DD729C032AB836FB00D8F6F2 /* SignedApp.swift in Sources */,
-				DD5E0FC92AC0209200836326 /* MaterialView.swift in Sources */,
+				DD5E0FC92AC0209200836326 /* MaterialSettings.swift in Sources */,
 				DD729C402AB8672800D8F6F2 /* SignedObject.swift in Sources */,
 				DD5E0FC72ABFF40F00836326 /* ShapeView.swift in Sources */,
 				DD729C342AB8642300D8F6F2 /* RenderStates.swift in Sources */,
@@ -290,6 +297,7 @@
 				DDAE89012AC6692200A2200D /* PointCloud.swift in Sources */,
 				DD729C192AB83A9400D8F6F2 /* RenderView.swift in Sources */,
 				DD729C082AB836FB00D8F6F2 /* Signed.xcdatamodeld in Sources */,
+				DDAE89052AC9254700A2200D /* MaterialPicker.swift in Sources */,
 				DD729C212AB83E7B00D8F6F2 /* Drawables.swift in Sources */,
 				DD729C2B2AB8633600D8F6F2 /* ModelerPipeline.swift in Sources */,
 				DD729C262AB83F8B00D8F6F2 /* Math.swift in Sources */,

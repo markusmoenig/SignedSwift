@@ -159,7 +159,7 @@ class RenderPipeline
                         
                         model.progress = .rendering
                         model.progressCurrent = 0
-                        if model.currProject?.render == true {
+                        if model.currProject?.trace == true {
                             model.progressTotal = mainRenderKit.maxSamples
                         } else {
                             model.progressTotal = 40
@@ -404,7 +404,10 @@ class RenderPipeline
             
             var renderName = kit.renderName
             if kit.role == .main {
-                renderName = model.currProject?.render == true ? "renderBSDF" : "renderPBR"
+                renderName = model.currProject?.trace == true ? "renderBSDF" : "renderPBR"
+                if model.currMaterial != nil {
+                    renderName = "renderBSDF"
+                }
             }
             
             if kit.content == .material {
@@ -488,7 +491,15 @@ class RenderPipeline
             renderUniform.maxDepth = 6;
             renderUniform.backgroundColor = float4(0.15, 0.15, 0.15, 1)
 
-            renderUniform.showBBox = 0
+            renderUniform.showBBox = 1
+            if let project = model.currProject {
+                if project.bbox == false {
+                    renderUniform.showBBox = 0
+                }
+            } else
+            if model.currMaterial != nil {
+                renderUniform.showBBox = 0
+            }
 
 //            if kit.content == .project {
 //                if let rendererData = model.project.dataGroups.getGroup("Renderer") {
