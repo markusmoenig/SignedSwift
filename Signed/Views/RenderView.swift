@@ -163,79 +163,97 @@ public class SMTKView       : MTKView
             }
         }
         
-        let size = float2(Float(frame.width), Float(frame.height))
-        if let rc = model.modeler?.getSceneHit(mousePos / size, size) {
-            let id = rc.2
-            
-            for (i, uuid) in model.pointMap {
-                if id > i - 0.005 && id < i + 0.005 {
-                    if let project = model.currProject {
-                        for p in project.points?.allObjects as! [Point] {
-                            if p.id == uuid {
-                                model.pointChanged.send(p)
-                                //model.showContext.send((nil, nil, mousePos.x, mousePos.y))
-                                break
+        if mode == .Render3D {
+            let size = float2(Float(frame.width), Float(frame.height))
+            if let rc = model.modeler?.getSceneHit(mousePos / size, size) {
+                let id = rc.2
+                
+                for (i, uuid) in model.pointMap {
+                    if id > i - 0.005 && id < i + 0.005 {
+                        if let project = model.currProject {
+                            for p in project.points?.allObjects as! [Point] {
+                                if p.id == uuid {
+                                    model.pointChanged.send(p)
+                                    //model.showContext.send((nil, nil, mousePos.x, mousePos.y))
+                                    break
+                                }
                             }
-                        }
-                        for l in project.lines?.allObjects as! [Line] {
-                            if l.id == uuid {
-                                model.lineChanged.send(l)
-                                //model.showContext.send((nil, nil, mousePos.x, mousePos.y))
-                                break
+                            for l in project.lines?.allObjects as! [Line] {
+                                if l.id == uuid {
+                                    model.lineChanged.send(l)
+                                    //model.showContext.send((nil, nil, mousePos.x, mousePos.y))
+                                    break
+                                }
                             }
                         }
                     }
+                }
+            }
+        } else
+        if mode == .Points3D {
+            let size = float2(Float(frame.width), Float(frame.height))
+            if let rc = model.modeler?.getPointCloudHit(mousePos / size, size) {
+                let id = rc.w
+                
+                for (i, uuid) in model.pointMap {
+                    if id > i - 0.005 && id < i + 0.005 {
+                        if let project = model.currProject {
+                            for p in project.points?.allObjects as! [Point] {
+                                if p.id == uuid {
+                                    model.pointChanged.send(p)
+                                    //model.showContext.send((nil, nil, mousePos.x, mousePos.y))
+                                    break
+                                }
+                            }
+                            for l in project.lines?.allObjects as! [Line] {
+                                if l.id == uuid {
+                                    model.lineChanged.send(l)
+                                    //model.showContext.send((nil, nil, mousePos.x, mousePos.y))
+                                    break
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                let p = float3(rc.x, rc.y, rc.z)
+                if p.x >= -0.5 && p.x <= 0.5 && p.y >= -0.5 && p.y <= 0.5 && p.z >= -0.5 && p.z <= 0.5 {
+                    
                 }
             }
         }
-        
-        /*
-        if mode == .Render3D {
-            let size = float2(Float(frame.width), Float(frame.height))
-            let rc = model.modeler?.getSceneHit(mousePos / size, size)
-            print(rc)
-        } else
-        if mode == .Points2D {
-            print(mousePos.x, mousePos.y)
-            
-            if let points = model.currProject?.points {
-                
-                let points = points.allObjects as! [Point]
-                             
-                let s = pointRadius
-                let mx = mousePos.x
-                let my = mousePos.y
-                
-                var found = false
-                
-                for p in points {
-                    
-                    if axis == .XY {
-                        
-                        let x = (p.x + 0.5) * Float(self.drawables!.metalView.bounds.width)
-                        let y = (1.0 - (p.y + 0.5)) * Float(self.drawables!.metalView.bounds.height)
-
-                        if x >= mx - s && x < mx + s {
-                            if y >= my - s && y < my + s {
-                                model.pointChanged.send(p)
-                                self.currentPoint = p
-                                found = true
-                                break
-                            }
-                        }
-                    }
-                }
-                
-                if found == false {
-                    model.pointChanged.send(nil)
-                    self.currentPoint = nil
-                }
-            }
-        }*/
     }
     
     override public func mouseDragged(with event: NSEvent) {
         setMousePos(event)
+        
+        if mode == .Points3D && model.pointEditAxisMode != POINT_AXIS_NONE {
+            if let point = model.currPoint {
+                let size = float2(Float(frame.width), Float(frame.height))
+                if let rc = model.modeler?.getPointCloudHit(mousePos / size, size) {
+                    var p = float3(rc.x, rc.y, rc.z)
+                    
+                    p.x = p.x.clamped(to: -0.5 ... 0.5)
+                    p.y = p.y.clamped(to: -0.5 ... 0.5)
+                    p.z = p.z.clamped(to: -0.5 ... 0.5)
+
+                    if model.pointEditAxisMode == POINT_AXIS_XZ {
+                        point.x = p.x
+                        point.z = p.z
+                    } else
+                    if model.pointEditAxisMode == POINT_AXIS_XY {
+                        point.x = p.x
+                        point.y = p.y
+                    } else
+                    if model.pointEditAxisMode == POINT_AXIS_YZ {
+                        point.y = p.y
+                        point.z = p.z
+                    }
+                    model.pointChanged.send(point)
+                    model.build()
+                }
+            }
+        }
     }
     
     override public func mouseMoved(with event: NSEvent) {

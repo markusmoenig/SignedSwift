@@ -164,6 +164,11 @@ typedef struct {
     
 } RenderUniform;
 
+#define POINT_AXIS_NONE      -1
+#define POINT_AXIS_XZ         0
+#define POINT_AXIS_XY         1
+#define POINT_AXIS_YZ         2
+
 typedef struct {
     simd_float3         randomVector;
 
@@ -171,6 +176,13 @@ typedef struct {
     simd_float3         cameraLookAt;
     float               cameraFov;
     
+    simd_float2         uv;
+    simd_float2         size;
+    int                 axis;
+    simd_float3         axisOffset;
+    
+    float               scale;
+
     int                 numberOfPoints;
 } PointCloudUniform;
 

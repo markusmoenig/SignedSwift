@@ -44,6 +44,10 @@ struct SceneView: View {
     @State private var editLinesPopover                 : Bool = false
     @State private var editShapesPopover                : Bool = false
     
+    @State private var editPointFront                   : Bool = false
+    @State private var editPointTop                     : Bool = true
+    @State private var editPointSide                    : Bool = false
+
     @State private var renderIsMain                     : Bool = true
     @State private var showSideKick                     : Bool = true
 
@@ -584,13 +588,53 @@ struct SceneView: View {
             
             ToolbarItemGroup(placement: .automatic) {
                 
+                Toggle("FRONT", isOn: $editPointFront)
+                    .toggleStyle(.button)
+                    .onChange(of: editPointFront) { newValue in
+                        if newValue {
+                            model.pointEditAxisMode = POINT_AXIS_XY
+                            editPointTop = false
+                            editPointSide = false
+                        } else
+                        if !editPointTop && !editPointFront && !editPointSide {
+                            model.pointEditAxisMode = POINT_AXIS_NONE
+                        }
+                    }
+                
+                Toggle("TOP", isOn: $editPointTop)
+                    .toggleStyle(.button)
+                    .onChange(of: editPointTop) { newValue in
+                        if newValue {
+                            model.pointEditAxisMode = POINT_AXIS_XZ
+                            editPointFront = false
+                            editPointSide = false
+                        } else
+                        if !editPointTop && !editPointFront && !editPointSide {
+                            model.pointEditAxisMode = POINT_AXIS_NONE
+                        }
+                    }
+                
+                Toggle("SIDE", isOn: $editPointSide)
+                    .toggleStyle(.button)
+                    .onChange(of: editPointSide) { newValue in
+                        if newValue {
+                            model.pointEditAxisMode = POINT_AXIS_YZ
+                            editPointFront = false
+                            editPointTop = false
+                        } else
+                        if !editPointTop && !editPointFront && !editPointSide {
+                            model.pointEditAxisMode = POINT_AXIS_NONE
+                        }
+                    }
+                
                 Button(action: {
                     renderIsMain.toggle()
                     model.renderIsMain = renderIsMain
                 }) {
-                    Label("Cycle", systemImage: "arrow.2.squarepath")
+                    Label("Cycle", systemImage: renderIsMain ? "circle.grid.cross" : "circle.grid.cross.fill")
                         .imageScale(.large)
                 }
+                //.keyboardShortcut(KeyboardShortcut(.tab))
                 
                 Button(action: {
                     withAnimation {
@@ -962,6 +1006,7 @@ struct SceneView: View {
         
         .onReceive(self.model.pointChanged) { point in
             self.selectedPoint = point
+            model.currPoint = point
             self.selectedLine = nil
 //            if let point = point {
 //                pointXValue = String(point.x)
@@ -973,6 +1018,7 @@ struct SceneView: View {
         .onReceive(self.model.lineChanged) { line in
             self.selectedPoint = nil
             self.selectedLine = line
+            model.currPoint = nil
         }
         
         .onReceive(self.model.showContext) { ctx in

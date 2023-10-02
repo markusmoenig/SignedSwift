@@ -362,7 +362,14 @@ class RenderPipeline
                 pointCloudUniform.cameraFov = model.project.camera.getFov()
                 pointCloudUniform.numberOfPoints = Int32(numberOfPoints)
                 
-                let dataBufferLength = numberOfPoints * MemoryLayout<float4>.stride
+                if let point = model.currPoint {
+                    pointCloudUniform.axis = model.pointEditAxisMode
+                    pointCloudUniform.axisOffset = float3(point.x, point.y, point.z)
+                } else {
+                    pointCloudUniform.axis = POINT_AXIS_NONE;
+                }
+                
+                let dataBufferLength = numberOfPoints * MemoryLayout<float4>.stride * 2
                 let dataBuffer = device.makeBuffer(bytes: points, length: dataBufferLength, options: [])!
                 
                 computeEncoder.setBytes(&pointCloudUniform, length: MemoryLayout<PointCloudUniform>.stride, index: 0)
@@ -632,7 +639,6 @@ class RenderPipeline
     {
         var resChanged = false
 
-            
         // Get the renderSize
         if let rSize = self.model.renderSize {
             renderSize.x = rSize.x
@@ -734,8 +740,6 @@ class RenderPipeline
                                                                   mipmapped: false)
         descriptor.usage = .shaderRead
         guard let texture = device.makeTexture(descriptor: descriptor) else { return nil }
-
-        print(image.bitsPerPixel);
 
         if image.bitsPerComponent == 32 && image.bitsPerPixel == 128 {
             let srcData: CFData! = image.dataProvider?.data

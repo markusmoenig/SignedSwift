@@ -48,6 +48,10 @@ class Model: NSObject, ObservableObject {
     var currProject                         : Project? = nil
     var currMaterial                        : Material? = nil
 
+    var currPoint                           : Point? = nil
+    
+    var pointEditAxisMode                   : Int32 = POINT_AXIS_XZ
+
     /// Send when the camera mode changed
     let cameraModeChanged                   = PassthroughSubject<ModelerKit.Content, Never>()
     
@@ -153,166 +157,162 @@ class Model: NSObject, ObservableObject {
     /// Build the project, i.e. model the project state
     func build() {
         
-        var id : Float = 0.01
-        if renderIsMain {
-            pointMap = [:]
-        }
-        
-        print("build")
-        
-        func setMaterial(cmd: SignedCommand, material: Material) {
-            cmd.material.data.set("color", float3(material.red, material.green, material.blue))
-                            
-            cmd.material.data.set("subsurface", material.subsurface)
-            cmd.material.data.set("metallic", material.metallic)
-            cmd.material.data.set("specular", material.specular)
-            cmd.material.data.set("specularTint", material.specularTint)
-            cmd.material.data.set("roughness", material.roughness)
-            cmd.material.data.set("anisotropic", material.anisotropic)
-            cmd.material.data.set("sheen", material.sheen)
-            cmd.material.data.set("sheenTint", material.sheenTint)
-            cmd.material.data.set("clearcoat", material.clearcoat)
-            cmd.material.data.set("clearcoatGloss", material.clearcoatGloss)
-            cmd.material.data.set("transmission", material.transmission)
-            cmd.material.data.set("ior", material.ior)
-            cmd.material.data.set("emission", float3(repeating: material.emission))
-        }
-        
-        func createCmd(shape: Shape, position: float3, rotation: float3 = float3(0,0,0)) -> SignedCommand {
-            var primitive : SignedCommand.Primitive = .Sphere
-            if let name = shape.shapeName {
-                if name == "Box" {
-                    primitive = .Box
-                }
-                if name == "Cylinder" {
-                    primitive = .Cylinder
-                }
-            }
+        DispatchQueue.main.async {
             
-            var action : SignedCommand.Action = .Add
-            if let name = shape.blendModeName {
-                if name == "Subtract" {
-                    action = .Subtract
-                }
-            }
+            var id : Float = 0.01
+            self.pointMap = [:]
             
-            let cmd = SignedCommand("Sphere", role: .GeometryAndMaterial, action: action, primitive: primitive)
+            print("build")
             
-            if let data = cmd.dataGroups.getGroup("Transform") {
-                data.set("position", position)
-                data.set("rotation", rotation)
-                //data.set("pivot", position)
-            }
-            
-            if let data = cmd.dataGroups.getGroup("Geometry") {
-                data.set("radius", shape.radius)
-                data.set("size", float3(shape.sizeX, shape.sizeY, shape.sizeZ))
-            }
-
-            if let data = cmd.dataGroups.getGroup("Boolean") {
-                if let blendModeName = shape.blendModeName {
-                    data.set("mode", blendModeName)
-                    data.set("smoothing", shape.smoothing)
-                }
-            }
-            
-            if let material = getMaterial(shape.material) {                
-                setMaterial(cmd: cmd, material: material)
-            }
-
-            if let data = cmd.dataGroups.getGroup("Modifier") {
-                data.set("noise", shape.noise)
-                data.set("onion", shape.onion)
-                data.set("max", float3(shape.cutOffX, 10.0, 10.0))
-            }
-
-            return cmd
-        }
+            func setMaterial(cmd: SignedCommand, material: Material) {
+                cmd.material.data.set("color", float3(material.red, material.green, material.blue))
                 
-        modeler?.clear()
-        if let project = currProject {
-            for p in project.points?.allObjects as! [Point] {
-                
-                if project.showPoints {
-//                    let cmd = SignedCommand("Sphere", role: .GeometryAndMaterial, action: .Add, primitive: .Sphere)
-//                    
-//                    if let data = cmd.dataGroups.getGroup("Transform") {
-//                        data.set("position", float3(p.x, p.y, p.z))
-//                    }
-//                    
-//                    if let data = cmd.dataGroups.getGroup("Geometry") {
-//                        data.set("radius", 1.0 / 50.0)
-//                    }
-//                    
-//                    cmd.material.data.set("color", float3(p.red, p.green, p.blue))
-//                    cmd.material.data.set("roughness", 0.5)
-//                    //cmd.material.albedo = float3(p.red, p.green, p.blue)
-//                    modeler?.executeCommand(cmd: cmd, id: id)
-                    if renderIsMain {
-                        pointMap[id] = p.id
+                cmd.material.data.set("subsurface", material.subsurface)
+                cmd.material.data.set("metallic", material.metallic)
+                cmd.material.data.set("specular", material.specular)
+                cmd.material.data.set("specularTint", material.specularTint)
+                cmd.material.data.set("roughness", material.roughness)
+                cmd.material.data.set("anisotropic", material.anisotropic)
+                cmd.material.data.set("sheen", material.sheen)
+                cmd.material.data.set("sheenTint", material.sheenTint)
+                cmd.material.data.set("clearcoat", material.clearcoat)
+                cmd.material.data.set("clearcoatGloss", material.clearcoatGloss)
+                cmd.material.data.set("transmission", material.transmission)
+                cmd.material.data.set("ior", material.ior)
+                cmd.material.data.set("emission", float3(repeating: material.emission))
+            }
+            
+            func createCmd(shape: Shape, position: float3, rotation: float3 = float3(0,0,0)) -> SignedCommand {
+                var primitive : SignedCommand.Primitive = .Sphere
+                if let name = shape.shapeName {
+                    if name == "Box" {
+                        primitive = .Box
+                    }
+                    if name == "Cylinder" {
+                        primitive = .Cylinder
                     }
                 }
                 
-                if project.showShapes {
-                    for shape in p.shapes?.allObjects as! [Shape] {
-                        let cmd = createCmd(shape: shape, position: float3(p.x, p.y, p.z))
-                        modeler?.executeCommand(cmd: cmd, id: id)
+                var action : SignedCommand.Action = .Add
+                if let name = shape.blendModeName {
+                    if name == "Subtract" {
+                        action = .Subtract
                     }
                 }
                 
-                id += 0.01
+                let cmd = SignedCommand("Sphere", role: .GeometryAndMaterial, action: action, primitive: primitive)
+                
+                if let data = cmd.dataGroups.getGroup("Transform") {
+                    data.set("position", position)
+                    data.set("rotation", rotation)
+                    //data.set("pivot", position)
+                }
+                
+                if let data = cmd.dataGroups.getGroup("Geometry") {
+                    data.set("radius", shape.radius)
+                    data.set("size", float3(shape.sizeX, shape.sizeY, shape.sizeZ))
+                }
+                
+                if let data = cmd.dataGroups.getGroup("Boolean") {
+                    if let blendModeName = shape.blendModeName {
+                        data.set("mode", blendModeName)
+                        data.set("smoothing", shape.smoothing)
+                    }
+                }
+                
+                if let material = self.getMaterial(shape.material) {
+                    setMaterial(cmd: cmd, material: material)
+                }
+                
+                if let data = cmd.dataGroups.getGroup("Modifier") {
+                    data.set("noise", shape.noise)
+                    data.set("onion", shape.onion)
+                    data.set("max", float3(shape.cutOffX, 10.0, 10.0))
+                }
+                
+                return cmd
             }
             
-            for l in project.lines?.allObjects as! [Line] {
-
-                if renderIsMain {
-                    pointMap[id] = l.id
-                }
-
-                let from = getPoint(l.startPoint)
-                let to = getPoint(l.endPoint)
-                
-                func getAngle(_ line: [float2]) -> Float {
-                    let start = line[0]
-                    let end = line[1]
+            self.modeler?.clear()
+            if let project = self.currProject {
+                for p in project.points?.allObjects as! [Point] {
                     
-                    let delta = end - start
-                    return atan2(delta.y, delta.x).radiansToDegrees
-                }
-                
-                if let from = from {
-                    if let to = to {
-                        
-                        let f = float3(from.x, from.y, from.z)
-                        let t = float3(to.x, to.y, to.z)
-                        
-                        let middle = (f + t) / 2
-                        let rotation = float3(
-                            f.x < t.x ? getAngle([float2(f.y, f.z), float2(t.y, t.z)]) :  getAngle([float2(t.y, t.z), float2(f.y, f.z)]),
-                            f.y < t.y ? getAngle([float2(f.x, f.z), float2(t.x, t.z)]) : getAngle([float2(t.x, t.z), float2(f.x, f.z)]),
-                            f.z < t.z ? getAngle([float2(f.x, f.y), float2(t.x, t.y)]) : getAngle([float2(t.x, t.y), float2(f.x, f.y)])
-                        )
-                        
-                        for shape in l.shapes?.allObjects as! [Shape] {
-                            
-                            let cmd = createCmd(shape: shape, position: middle, rotation: rotation)
-                            modeler?.executeCommand(cmd: cmd, id: id)
+                    if project.showPoints {
+                        //                    let cmd = SignedCommand("Sphere", role: .GeometryAndMaterial, action: .Add, primitive: .Sphere)
+                        //
+                        //                    if let data = cmd.dataGroups.getGroup("Transform") {
+                        //                        data.set("position", float3(p.x, p.y, p.z))
+                        //                    }
+                        //
+                        //                    if let data = cmd.dataGroups.getGroup("Geometry") {
+                        //                        data.set("radius", 1.0 / 50.0)
+                        //                    }
+                        //
+                        //                    cmd.material.data.set("color", float3(p.red, p.green, p.blue))
+                        //                    cmd.material.data.set("roughness", 0.5)
+                        //                    //cmd.material.albedo = float3(p.red, p.green, p.blue)
+                        //                    modeler?.executeCommand(cmd: cmd, id: id)
+                        self.pointMap[id] = p.id
+                    }
+                    
+                    if project.showShapes {
+                        for shape in p.shapes?.allObjects as! [Shape] {
+                            let cmd = createCmd(shape: shape, position: float3(p.x, p.y, p.z))
+                            self.modeler?.executeCommand(cmd: cmd, id: id)
                         }
                     }
+                    
+                    id += 0.01
                 }
-                id += 0.01
+                
+                for l in project.lines?.allObjects as! [Line] {
+                    
+                    self.pointMap[id] = l.id
+                    
+                    let from = self.getPoint(l.startPoint)
+                    let to = self.getPoint(l.endPoint)
+                    
+                    func getAngle(_ line: [float2]) -> Float {
+                        let start = line[0]
+                        let end = line[1]
+                        
+                        let delta = end - start
+                        return atan2(delta.y, delta.x).radiansToDegrees
+                    }
+                    
+                    if let from = from {
+                        if let to = to {
+                            
+                            let f = float3(from.x, from.y, from.z)
+                            let t = float3(to.x, to.y, to.z)
+                            
+                            let middle = (f + t) / 2
+                            let rotation = float3(
+                                f.x < t.x ? getAngle([float2(f.y, f.z), float2(t.y, t.z)]) :  getAngle([float2(t.y, t.z), float2(f.y, f.z)]),
+                                f.y < t.y ? getAngle([float2(f.x, f.z), float2(t.x, t.z)]) : getAngle([float2(t.x, t.z), float2(f.x, f.z)]),
+                                f.z < t.z ? getAngle([float2(f.x, f.y), float2(t.x, t.y)]) : getAngle([float2(t.x, t.y), float2(f.x, f.y)])
+                            )
+                            
+                            for shape in l.shapes?.allObjects as! [Shape] {
+                                
+                                let cmd = createCmd(shape: shape, position: middle, rotation: rotation)
+                                self.modeler?.executeCommand(cmd: cmd, id: id)
+                            }
+                        }
+                    }
+                    id += 0.01
+                }
+            } else
+            if let material = self.currMaterial {
+                
+                let cmd = SignedCommand("Sphere", role: .GeometryAndMaterial, action: .Add, primitive: .Sphere, data: ["Geometry": SignedData([SignedDataEntity("radius", Float(0.49), float2(0, 5), .Slider, .None, "Radius of the sphere.")])])
+                
+                setMaterial(cmd: cmd, material: material)
+                self.modeler?.executeCommand(cmd: cmd, id: 0)
             }
-        } else
-        if let material = currMaterial {
             
-            var cmd = SignedCommand("Sphere", role: .GeometryAndMaterial, action: .Add, primitive: .Sphere, data: ["Geometry": SignedData([SignedDataEntity("radius", Float(0.49), float2(0, 5), .Slider, .None, "Radius of the sphere.")])])
-            
-            setMaterial(cmd: cmd, material: material)
-            
-            modeler?.executeCommand(cmd: cmd, id: 0)
+            self.renderer?.restart()
         }
-        
-        renderer?.restart()
     }
     
     /// Sets the pointRender View

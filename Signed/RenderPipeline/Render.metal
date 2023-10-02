@@ -1686,7 +1686,6 @@ kernel void renderPBR(         constant RenderUniform               &renderData 
     sampleTexture.write(float4(radiance, 1.0), gid);
 }
 
-
 // MARK: Hit Scene Entry Point
 kernel void modelerHitScene(constant ModelerHitUniform           &mData [[ buffer(0) ]],
                             texture3d<float>                     modelTexture [[ texture(1) ]],
@@ -1797,6 +1796,22 @@ kernel void pointCloud(constant PointCloudUniform                  &renderData [
     float closestDistace = INFINITY;
     int closestIndex = 0;
     
+    float3 planeNormal = float3(0.0, 0.0, 0.0);
+    float3 planeOffset = float3(0.0, 0.0, 0.0);
+    
+    if (renderData.axis == POINT_AXIS_XZ) {
+        planeNormal = float3(0.0, 1.0, 0.0);
+        planeOffset = renderData.axisOffset;
+    } else
+    if (renderData.axis == POINT_AXIS_XY) {
+        planeNormal = float3(0.0, 0.0, 1.0);
+        planeOffset = renderData.axisOffset;
+    } else
+    if (renderData.axis == POINT_AXIS_YZ) {
+        planeNormal = float3(1.0, 0.0, 0.0);
+        planeOffset = renderData.axisOffset;
+    }
+    
     for( int m=0; m<aa; m++ ) {
         for( int n=0; n<aa; n++ ) {
             float2 o = float2(float(m),float(n)) / float(aa) - 0.5;
@@ -1836,6 +1851,21 @@ kernel void pointCloud(constant PointCloudUniform                  &renderData [
                 color.w = 1.0;
             }
             
+            // Plane test if any
+            
+            if (renderData.axis != POINT_AXIS_NONE) {
+                float denom = dot(planeNormal, ray.direction);
+                if (abs(denom) > 0.0001) {
+                    float t = dot(planeOffset - ray.origin, planeNormal) / denom;
+                    if (t >= 0.0 && t < closestDistace) {
+                        float3 p = ray.origin + ray.direction * t;
+                        if (p.x >= -0.51 && p.x <= 0.51 && p.y >= -0.51 && p.y <= 0.51 && p.z >= -0.51 && p.z <= 0.51) {
+                            color.x += 0.3;
+                        }
+                    }
+                }
+            }
+            
             total += color;
         }
     }
@@ -1844,4 +1874,81 @@ kernel void pointCloud(constant PointCloudUniform                  &renderData [
     total.w = clamp(total.w, 0.0, 1.0);
     
     texture.write(total, gid);
+}
+
+// MARK: Hit Scene Entry Point
+kernel void modelerHitPointCloud(constant PointCloudUniform     &renderData [[ buffer(0) ]],
+                            device float4 *points                [[ buffer(1) ]],
+                            device float4 *out                   [[ buffer(2) ]],
+                            uint gid                             [[thread_position_in_grid]])
+{
+    float3 ro = renderData.cameraOrigin;
+    float3 rd = renderData.cameraLookAt;
+    
+    struct DataIn dataIn;
+    
+    dataIn.seed = renderData.uv;
+    dataIn.randomVector = renderData.randomVector;
+    
+    rd = getCamerayRay(renderData.uv, ro, rd, renderData.cameraFov, renderData.size, dataIn);
+    
+    float scale = renderData.scale;
+
+    float r = 0.5 * scale; float3 rectNormal;
+    float2 bbox = boxIntersection(ro, rd, float3(r, r, r), rectNormal);
+    
+    float4 result1 = float4(-1);
+    float4 result2 = float4(-1);
+
+    float3 planeNormal = float3(0.0, 0.0, 0.0);
+    float3 planeOffset = float3(0.0, 0.0, 0.0);
+    
+    if (renderData.axis == POINT_AXIS_XZ) {
+        planeNormal = float3(0.0, 1.0, 0.0);
+        planeOffset = renderData.axisOffset;
+    } else
+    if (renderData.axis == POINT_AXIS_XY) {
+        planeNormal = float3(0.0, 0.0, 1.0);
+        planeOffset = renderData.axisOffset;
+    } else
+    if (renderData.axis == POINT_AXIS_YZ) {
+        planeNormal = float3(1.0, 0.0, 0.0);
+        planeOffset = renderData.axisOffset;
+    }
+    
+    float closestDistace = INFINITY;
+    int closestIndex = 0;
+    
+    if (bbox.y > 0.0) {
+    
+        for (int i = 0; i < renderData.numberOfPoints; i += 1) {
+            int index = i * 2;
+            
+            float2 rc = sphIntersect(ro, rd, points[index].xyz, 0.03);
+            if ( rc.x >= 0.0 && rc.x < closestDistace) {
+                closestDistace = rc.x;
+                closestIndex = index;
+            }
+        }
+        
+        if (closestDistace < INFINITY) {
+            result1.w = points[closestIndex].w;
+        }
+        
+        // Plane test if any
+        float denom = dot(planeNormal, rd);
+        if (abs(denom) > 0.0001) {
+            float t = dot(planeOffset - ro, planeNormal) / denom;
+            if (t >= 0.0) {
+                float3 p = ro + rd * t;
+                result1.xyz = p;
+                //if (p.x >= -0.5 && p.x <= 0.5 && p.y >= -0.5 && p.y <= 0.5 && p.z >= -0.5 && p.z <= 0.5) {
+                    
+                //}
+            }
+        }
+    }
+    
+    out[gid] = float4(result1);
+    out[gid+1] = float4(result2);
 }

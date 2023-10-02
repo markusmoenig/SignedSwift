@@ -22,6 +22,7 @@ class ModelerStates {
         computeStates["modelerCmd"] = createComputeState(name: "modelerCmd")
         computeStates["modelerHitScene"] = createComputeState(name: "modelerHitScene")
         computeStates["modelerClear"] = createComputeState(name: "modelerClear")
+        computeStates["modelerHitPointCloud"] = createComputeState(name: "modelerHitPointCloud")
         computeStates["modelerMakeCGIImage"] = createComputeState(name: "modelerMakeCGIImage")
     }
     

@@ -339,6 +339,78 @@ class ModelerPipeline
         return rc
     }
     
+    /// Returns the hit position and normal for a given screen position
+    func getPointCloudHit(_ uv: float2, _ size: float2) -> float4 {
+        let outBuffer = device.makeBuffer(length: 2 * MemoryLayout<SIMD4<Float>>.stride, options: [])!
+
+        var id : Float = 0.01
+        var pointMap : [Float:UUID] = [:]
+        
+        startCompute()
+
+        if let computeEncoder = commandBuffer?.makeComputeCommandEncoder() {
+            
+            // Evaluate shapes
+            if let state = modelingStates.getComputeState(stateName: "modelerHitPointCloud") {
+            
+                computeEncoder.setComputePipelineState( state )
+                
+                var pointCloudUniform = PointCloudUniform()
+
+                pointCloudUniform.randomVector = float3(Float.random(in: 0...1), Float.random(in: 0...1), Float.random(in: 0...1))
+                
+                var numberOfPoints : Int = 0
+                var points : [float4] = []
+
+                if let project = model.currProject {
+                    numberOfPoints = project.points!.count
+                    for p in project.points?.allObjects as! [Point] {
+                        points.append(float4(p.x, p.y, p.z, id))
+                        points.append(float4(p.red, p.green, p.blue, 0.0))
+                        
+                        pointMap[id] = p.id
+                        id += 0.01
+                    }
+                }
+                
+                pointCloudUniform.uv = uv
+                pointCloudUniform.size = size
+                pointCloudUniform.scale = 1
+                pointCloudUniform.cameraOrigin = model.project.camera.getPosition()
+                pointCloudUniform.cameraLookAt = model.project.camera.getLookAt()
+                pointCloudUniform.cameraFov = model.project.camera.getFov()
+                pointCloudUniform.numberOfPoints = Int32(numberOfPoints)
+
+                if let point = model.currPoint {
+                    pointCloudUniform.axis = model.pointEditAxisMode
+                    pointCloudUniform.axisOffset = float3(point.x, point.y, point.z)
+                } else {
+                    pointCloudUniform.axis = POINT_AXIS_NONE;
+                }
+                
+                let dataBufferLength = numberOfPoints * MemoryLayout<float4>.stride * 2
+                let dataBuffer = device.makeBuffer(bytes: points, length: dataBufferLength, options: [])!
+                
+                computeEncoder.setBytes(&pointCloudUniform, length: MemoryLayout<PointCloudUniform>.stride, index: 0)
+                computeEncoder.setBuffer(dataBuffer, offset: 0, index: 1)
+                computeEncoder.setBuffer(outBuffer, offset: 0, index: 2)
+
+                let numThreadgroups = MTLSize(width: 1, height: 1, depth: 1)
+                let threadsPerThreadgroup = MTLSize(width: 1, height: 1, depth: 1)
+                computeEncoder.dispatchThreadgroups(numThreadgroups, threadsPerThreadgroup: threadsPerThreadgroup)
+
+            }
+            computeEncoder.endEncoding()
+        }
+        
+        stopCompute(waitUntilCompleted: true)
+        
+        let result = outBuffer.contents().bindMemory(to: SIMD4<Float>.self, capacity: 1)
+        
+        print(result[0].w)
+        return result[0]
+    }
+    
     /// Allocates a set of textures needed for modeling
     func allocateKit(width: Int, height: Int, depth: Int) -> ModelerKit {
         let modelerKit = ModelerKit()
@@ -346,7 +418,7 @@ class ModelerPipeline
         print("allocateKit", width, height, depth)
                 
         //print(device.supportsFeatureSet(.macOS_GPUFamily2_v1))
-        modelerKit.modelTexture = allocateTexture3D(width: width, height: height, depth: depth, format: .r16Float)
+        modelerKit.modelTexture = allocateTexture3D(width: width, height: height, depth: depth, format: .r32Float)
 //        #if os(OSX)
 //        modelerKit.colorTexture = allocateTexture3D(width: width, height: height, depth: depth, format: .rgba16Float)
 //        modelerKit.materialTexture1 = allocateTexture3D(width: width, height: height, depth: depth, format: .rgba16Float)
@@ -365,12 +437,12 @@ class ModelerPipeline
     }
     
     func freeKit(_ kit: ModelerKit) {
-        kit.modelTexture?.setPurgeableState(.volatile);
-        kit.colorTexture?.setPurgeableState(.volatile);
-        kit.materialTexture1?.setPurgeableState(.volatile);
-        kit.materialTexture2?.setPurgeableState(.volatile);
-        kit.materialTexture3?.setPurgeableState(.volatile);
-        kit.materialTexture4?.setPurgeableState(.volatile);
+//        kit.modelTexture?.setPurgeableState(.volatile)
+//        kit.colorTexture?.setPurgeableState(.volatile)
+//        kit.materialTexture1?.setPurgeableState(.volatile)
+//        kit.materialTexture2?.setPurgeableState(.volatile)
+//        kit.materialTexture3?.setPurgeableState(.volatile)
+//        kit.materialTexture4?.setPurgeableState(.volatile)
 
         kit.modelTexture = nil
         kit.colorTexture = nil

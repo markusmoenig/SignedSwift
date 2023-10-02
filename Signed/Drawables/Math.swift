@@ -30,3 +30,9 @@ extension Double {
         (self / 180) * Double.pi
     }
 }
+
+extension Comparable {
+    func clamped(to limits: ClosedRange<Self>) -> Self {
+        return min(max(self, limits.lowerBound), limits.upperBound)
+    }
+}
