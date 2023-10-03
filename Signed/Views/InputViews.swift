@@ -21,6 +21,7 @@ struct FloatView: View {
 
     @Binding var floatValue                 : Float
     @State private var floatValueText       : String
+    @State var newValue                     : Float = 0.0
 
     @State private var editPopover          : Bool = false
 
@@ -30,6 +31,7 @@ struct FloatView: View {
         self.range = range
         self._floatValue = value
         self._floatValueText = State(initialValue: String(format: "%.03f", value.wrappedValue))
+        self._newValue = State(initialValue: value.wrappedValue)
     }
  
     var body: some View {
@@ -37,11 +39,18 @@ struct FloatView: View {
             Text(name)
                 .frame(width: nameWidth, alignment: .leading)
             
-            Slider(value: Binding<Float>(get: {floatValue}, set: { v in
-                floatValue = v
+            Slider(value: Binding<Float>(get: {newValue}, set: { v in
+                newValue = v
                 floatValueText = String(format: "%.03f", v)
-            }), in: range.x...range.y)
-            .controlSize(.mini)
+            }), in: range.x...range.y) { editing in
+                print(editing)
+                if editing == false {
+                    if newValue != floatValue {
+                        floatValue = newValue
+                    }
+                }
+            }
+            
             
             Text(floatValueText)
 #if os(iOS)
