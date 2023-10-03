@@ -407,7 +407,6 @@ class ModelerPipeline
         
         let result = outBuffer.contents().bindMemory(to: SIMD4<Float>.self, capacity: 1)
         
-        print(result[0].w)
         return result[0]
     }
     

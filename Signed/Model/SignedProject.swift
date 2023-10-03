@@ -38,7 +38,7 @@ class SignedProject: Codable {
     var materialCamera                      = SignedPinholeCamera("Material Camera", .material)
 
     /// Resolution of the 3D texture
-    var resolution                          = Int(256)
+    var resolution                          = Int(380)
     
     /// Project settings data groups
     var dataGroups                          : SignedDataGroups

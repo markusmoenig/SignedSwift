@@ -82,7 +82,9 @@ struct SceneView: View {
     @State private var isOrbiting                       : Bool = false
     @State private var isMoving                         : Bool = false
     @State private var isZooming                        : Bool = false
-        
+
+    @State private var dismissable                      : Bool = true
+
     init(model: Model, project: Project) {
         self.model = model
         self.project = project
@@ -850,7 +852,7 @@ struct SceneView: View {
                 }
 
                 Button(action: {
-                    editShapesPopover = true
+                    editShapesPopover.toggle()
                 }) {
                     Label("SHAPES", systemImage: editShapesPopover ? "cube.fill" : "cube")
                         .imageScale(.large)
@@ -885,6 +887,9 @@ struct SceneView: View {
                                 shape.sizeX = 0.2
                                 shape.sizeY = 0.2
                                 shape.sizeZ = 0.2
+                                
+                                shape.lineOffset = 0
+                                shape.lineSize = 1.0
                                                                 
                                 if let selectedPoint = selectedPoint {
                                     
@@ -896,6 +901,7 @@ struct SceneView: View {
                                 } else
                                 if let selectedLine = selectedLine {
                                     shape.index = Int16(selectedLine.shapes!.count)
+                                    shape.line = selectedLine.id
                                     
                                     selectedLine.addToShapes(shape)
                                     self.selectedLine = nil
@@ -959,8 +965,9 @@ struct SceneView: View {
                             .listStyle(PlainListStyle())
                             .cornerRadius(10.0)
                         }
-                        
                     }
+                    .interactiveDismissDisabled(dismissable)
+
                     #if os(iOS)
                     .frame(width: 300, height: 600)
                     #else
@@ -981,14 +988,14 @@ struct SceneView: View {
                 modelIconColor = .accentColor
                 renderIconColor = .secondary
             }
-            if project?.showPoints == true && project?.showShapes == true {
-                showText = "Points & Shapes"
-            } else
-            if project?.showPoints == true {
-                showText = "Points Only"
-            } else {
-                showText = "Shapes Only"
-            }
+//            if project?.showPoints == true && project?.showShapes == true {
+//                showText = "Points & Shapes"
+//            } else
+//            if project?.showPoints == true {
+//                showText = "Points Only"
+//            } else {
+//                showText = "Shapes Only"
+//            }
         }
             
         .onReceive(self.model.updateUI) { _ in
@@ -1008,17 +1015,25 @@ struct SceneView: View {
             self.selectedPoint = point
             model.currPoint = point
             self.selectedLine = nil
-//            if let point = point {
-//                pointXValue = String(point.x)
-//                pointYValue = String(point.y)
-//                pointZValue = String(point.z)
-//            }
+            model.currLine = nil
+            if let point = point {
+                if pointXValue != String(point.x) {
+                    pointXValue = String(point.x)
+                }
+                if pointYValue != String(point.y) {
+                    pointYValue = String(point.y)
+                }
+                if pointZValue != String(point.z) {
+                    pointZValue = String(point.z)
+                }
+            }
         }
         
         .onReceive(self.model.lineChanged) { line in
             self.selectedPoint = nil
             self.selectedLine = line
             model.currPoint = nil
+            model.currLine = line
         }
         
         .onReceive(self.model.showContext) { ctx in
@@ -1042,9 +1057,11 @@ struct SceneView: View {
         .onChange(of: pointXValue) { newValue in
             if let point = selectedPoint {
                 if let v = Float(newValue) {
-                    point.x = v
-                    save("Cannot edit point")
-                    model.rebuild.send()
+                    if point.x != v {
+                        point.x = v
+                        save("Cannot edit point")
+                        model.rebuild.send()
+                    }
                 }
             }
         }
@@ -1052,9 +1069,11 @@ struct SceneView: View {
         .onChange(of: pointYValue) { newValue in
             if let point = selectedPoint {
                 if let v = Float(newValue) {
-                    point.y = v
-                    save("Cannot edit point")
-                    model.rebuild.send()
+                    if point.y != v {
+                        point.y = v
+                        save("Cannot edit point")
+                        model.rebuild.send()
+                    }
                 }
             }
         }
@@ -1062,9 +1081,11 @@ struct SceneView: View {
         .onChange(of: pointZValue) { newValue in
             if let point = selectedPoint {
                 if let v = Float(newValue) {
-                    point.z = v
-                    save("Cannot edit point")
-                    model.rebuild.send()
+                    if point.z != v {
+                        point.z = v
+                        save("Cannot edit point")
+                        model.rebuild.send()
+                    }
                 }
             }
         }

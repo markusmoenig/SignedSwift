@@ -88,7 +88,9 @@ class RenderPipeline
 //        iconBuilder = SignedBuilder(model)
         
         if let exrURL = Bundle.main.url(forResource: "kloofendal_48d_partly_cloudy_puresky_4k", withExtension:"exr") {
-            hdriTexture = loadEXRTexture(exrURL, device: device)
+            DispatchQueue.main.async {
+                self.hdriTexture = self.loadEXRTexture(exrURL, device: self.device)
+            }
         }
     }
     

@@ -40,6 +40,22 @@ struct ContentView: View {
                     } label: {
                         Text(project.name!)
                     }
+
+                    /*
+                    .swipeActions(allowsFullSwipe: false) {
+                        Button {
+                            print("Muting conversation")
+                        } label: {
+                            Label("Mute", systemImage: "bell.slash.fill")
+                        }
+                        .tint(.indigo)
+
+                        Button(role: .destructive) {
+                            print("Deleting conversation")
+                        } label: {
+                            Label("Delete", systemImage: "trash.fill")
+                        }
+                    }*/
                 }
                 .onDelete(perform: deleteProjects)
                 
@@ -102,8 +118,6 @@ struct ContentView: View {
             let newProject = Project(context: viewContext)
             newProject.name = "New Scene"
             newProject.id = UUID()
-            newProject.showPoints = true
-            newProject.showShapes = true
             newProject.trace = true
             newProject.bbox = true
 

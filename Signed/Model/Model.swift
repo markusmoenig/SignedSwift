@@ -49,7 +49,8 @@ class Model: NSObject, ObservableObject {
     var currMaterial                        : Material? = nil
 
     var currPoint                           : Point? = nil
-    
+    var currLine                            : Line? = nil
+
     var pointEditAxisMode                   : Int32 = POINT_AXIS_XZ
 
     /// Send when the camera mode changed
@@ -136,6 +137,21 @@ class Model: NSObject, ObservableObject {
         return nil
     }
     
+    /// Returns the line of the given id
+    func getLine(_ id: UUID?) -> Line? {
+        if id == nil { return nil }
+        
+        if let project = currProject {
+            for l in project.lines?.allObjects as! [Line] {
+                if l.id == id {
+                    return l
+                }
+            }
+        }
+        
+        return nil
+    }
+    
     /// Returns the material of the given id
     func getMaterial(_ id: UUID?) -> Material? {
         if id == nil { return nil }
@@ -182,7 +198,7 @@ class Model: NSObject, ObservableObject {
                 cmd.material.data.set("emission", float3(repeating: material.emission))
             }
             
-            func createCmd(shape: Shape, position: float3, rotation: float3 = float3(0,0,0)) -> SignedCommand {
+            func createCmd(shape: Shape, position: float3, rotation: float3 = float3(0,0,0), length: Float? = nil) -> SignedCommand {
                 var primitive : SignedCommand.Primitive = .Sphere
                 if let name = shape.shapeName {
                     if name == "Box" {
@@ -209,8 +225,19 @@ class Model: NSObject, ObservableObject {
                 }
                 
                 if let data = cmd.dataGroups.getGroup("Geometry") {
-                    data.set("radius", shape.radius)
-                    data.set("size", float3(shape.sizeX, shape.sizeY, shape.sizeZ))
+                    if let length = length {
+                        data.set("radius", shape.radius)
+                        data.set("size", float3(length, shape.sizeY, shape.sizeZ))
+                    } else {
+                        data.set("radius", shape.radius)
+                        if primitive == .Sphere {
+                            data.set("size", float3(shape.radius, shape.sizeY, shape.sizeZ))
+                        } else {
+                            data.set("size", float3(shape.sizeX, shape.sizeY, shape.sizeZ))
+                        }
+                        
+                    }
+                    data.set("rounding", shape.rounding)
                 }
                 
                 if let data = cmd.dataGroups.getGroup("Boolean") {
@@ -237,29 +264,11 @@ class Model: NSObject, ObservableObject {
             if let project = self.currProject {
                 for p in project.points?.allObjects as! [Point] {
                     
-                    if project.showPoints {
-                        //                    let cmd = SignedCommand("Sphere", role: .GeometryAndMaterial, action: .Add, primitive: .Sphere)
-                        //
-                        //                    if let data = cmd.dataGroups.getGroup("Transform") {
-                        //                        data.set("position", float3(p.x, p.y, p.z))
-                        //                    }
-                        //
-                        //                    if let data = cmd.dataGroups.getGroup("Geometry") {
-                        //                        data.set("radius", 1.0 / 50.0)
-                        //                    }
-                        //
-                        //                    cmd.material.data.set("color", float3(p.red, p.green, p.blue))
-                        //                    cmd.material.data.set("roughness", 0.5)
-                        //                    //cmd.material.albedo = float3(p.red, p.green, p.blue)
-                        //                    modeler?.executeCommand(cmd: cmd, id: id)
-                        self.pointMap[id] = p.id
-                    }
-                    
-                    if project.showShapes {
-                        for shape in p.shapes?.allObjects as! [Shape] {
-                            let cmd = createCmd(shape: shape, position: float3(p.x, p.y, p.z))
-                            self.modeler?.executeCommand(cmd: cmd, id: id)
-                        }
+                    self.pointMap[id] = p.id
+
+                    for shape in p.shapes?.allObjects as! [Shape] {
+                        let cmd = createCmd(shape: shape, position: float3(p.x, p.y, p.z))
+                        self.modeler?.executeCommand(cmd: cmd, id: id)
                     }
                     
                     id += 0.01
@@ -272,30 +281,103 @@ class Model: NSObject, ObservableObject {
                     let from = self.getPoint(l.startPoint)
                     let to = self.getPoint(l.endPoint)
                     
-                    func getAngle(_ line: [float2]) -> Float {
-                        let start = line[0]
-                        let end = line[1]
-                        
-                        let delta = end - start
-                        return atan2(delta.y, delta.x).radiansToDegrees
-                    }
-                    
                     if let from = from {
                         if let to = to {
                             
                             let f = float3(from.x, from.y, from.z)
                             let t = float3(to.x, to.y, to.z)
                             
-                            let middle = (f + t) / 2
-                            let rotation = float3(
-                                f.x < t.x ? getAngle([float2(f.y, f.z), float2(t.y, t.z)]) :  getAngle([float2(t.y, t.z), float2(f.y, f.z)]),
-                                f.y < t.y ? getAngle([float2(f.x, f.z), float2(t.x, t.z)]) : getAngle([float2(t.x, t.z), float2(f.x, f.z)]),
-                                f.z < t.z ? getAngle([float2(f.x, f.y), float2(t.x, t.y)]) : getAngle([float2(t.x, t.y), float2(f.x, f.y)])
-                            )
+                            let dir = t - f
+                            let direction = simd_normalize(dir)
+
+                            // Calculate the rotation matrix
+                            func rotationMatrix(from vector: simd_float3) -> simd_float3x3 {
+                                let x = simd_normalize(simd_float3(1.0, 0.0, 0.0))
+                                let dot = simd_dot(x, vector)
+                                
+                                if abs(dot - (-1.0)) < 0.000001 {
+                                    return simd_float3x3([
+                                        simd_float3(0.0, -1.0, 0.0),
+                                        simd_float3(0.0, 0.0, -1.0),
+                                        simd_float3(-1.0, 0.0, 0.0)
+                                    ])
+                                }
+                                if abs(dot - 1.0) < 0.000001 {
+                                    return simd_float3x3([
+                                        simd_float3(1.0, 0.0, 0.0),
+                                        simd_float3(0.0, 1.0, 0.0),
+                                        simd_float3(0.0, 0.0, 1.0)
+                                    ])
+                                }
+                                
+                                let axis = simd_cross(x, vector)
+                                let angle = acos(dot)
+                                let c = cos(angle)
+                                let s = sin(angle)
+                                let t = 1.0 - c
+                                
+                                let x_x = t * axis.x * axis.x + c
+                                let x_y = t * axis.x * axis.y - s * axis.z
+                                let x_z = t * axis.x * axis.z + s * axis.y
+                                
+                                let y_x = t * axis.x * axis.y + s * axis.z
+                                let y_y = t * axis.y * axis.y + c
+                                let y_z = t * axis.y * axis.z - s * axis.x
+                                
+                                let z_x = t * axis.x * axis.z - s * axis.y
+                                let z_y = t * axis.y * axis.z + s * axis.x
+                                let z_z = t * axis.z * axis.z + c
+                                
+                                return simd_float3x3([
+                                    simd_float3(x_x, x_y, x_z),
+                                    simd_float3(y_x, y_y, y_z),
+                                    simd_float3(z_x, z_y, z_z)
+                                ])
+                            }
+                            
+                            // Extract Euler angles from the rotation matrix
+                            func rotationMatrixToEulerAngles(_ matrix: simd_float3x3) -> simd_float3 {
+                                let sy = sqrt(matrix[0, 0] * matrix[0, 0] + matrix[1, 0] * matrix[1, 0])
+                                
+                                let singular = sy < 1e-6
+                                
+                                var x, y, z: Float
+                                
+                                if !singular {
+                                    x = atan2(matrix[2, 1], matrix[2, 2])
+                                    y = atan2(-matrix[2, 0], sy)
+                                    z = atan2(matrix[1, 0], matrix[0, 0])
+                                } else {
+                                    x = atan2(-matrix[1, 2], matrix[1, 1])
+                                    y = atan2(-matrix[2, 0], sy)
+                                    z = 0
+                                }
+                                
+                                return simd_float3(x, y, z)
+                            }
+                            
+                            let rotationMatrix = rotationMatrix(from: direction)
+                            var rotation = rotationMatrixToEulerAngles(rotationMatrix)
+
+                            rotation.x = -rotation.x
+                            rotation.y = -rotation.y
+                            
+                            let dx = t.x - f.x
+                            let dy = t.y - f.y
+                            let dz = t.z - f.z
+                            let length = sqrt(dx * dx + dy * dy + dz * dz)
                             
                             for shape in l.shapes?.allObjects as! [Shape] {
+
+                                let offset = shape.lineOffset / 2.0
+                                let lineSize = shape.lineSize * length
+
+                                let t = 0.5 - offset
+                                //t += lineSize / 2 - offset
                                 
-                                let cmd = createCmd(shape: shape, position: middle, rotation: rotation)
+                                let position = f + dir * t
+                            
+                                let cmd = createCmd(shape: shape, position: position, rotation: rotation, length: lineSize)
                                 self.modeler?.executeCommand(cmd: cmd, id: id)
                             }
                         }
@@ -305,7 +387,7 @@ class Model: NSObject, ObservableObject {
             } else
             if let material = self.currMaterial {
                 
-                let cmd = SignedCommand("Sphere", role: .GeometryAndMaterial, action: .Add, primitive: .Sphere, data: ["Geometry": SignedData([SignedDataEntity("radius", Float(0.49), float2(0, 5), .Slider, .None, "Radius of the sphere.")])])
+                let cmd = SignedCommand("Sphere", role: .GeometryAndMaterial, action: .Add, primitive: .Sphere, data: ["Geometry": SignedData([SignedDataEntity("size", float3(0.49 * 2.0, 0.49, 0.49), float2(0, 5), .Slider, .None, "Radius of the sphere.")])])
                 
                 setMaterial(cmd: cmd, material: material)
                 self.modeler?.executeCommand(cmd: cmd, id: 0)

@@ -1236,26 +1236,30 @@ kernel void renderBSDF(        constant RenderUniform               &renderData 
             
             if (state.depth > 0) {
 
-                #define INV_PI     0.31830988618379067
-                #define INV_TWO_PI 0.15915494309189533
-                
-                float theta = acos(clamp(ray.direction.y, -1.0, 1.0));
-                float2 uv = float2((PI + atan2(ray.direction.z, ray.direction.x)) * INV_TWO_PI, theta * INV_PI); //+ float2(envMapRot, 0.0);
-                
-                uv *= float2(hdriTexture.get_width(), hdriTexture.get_height());
-                             
-                float3 color = hdriTexture.read(ushort2(uv)).rgb;//texture(envMapTex, uv).rgb;
-                float pdf = Luminance(color);// / envMapTotalSum;
-                
-                float4 envMapColPdf = float4(color, (pdf /* * hdriTexture.get_width() *  hdriTexture.get_height())*/ / (M_2_PI_F * M_PI_F * sin(theta))));
-                
-                float misWeight = 1.0;
-
-                // Gather radiance from envmap and use scatterSample.pdf from previous bounce for MIS
-                misWeight = PowerHeuristic(bsdfSampleRec.pdf, envMapColPdf.w);
-                
-                if(misWeight > 0)
-                    radiance +=  pow(misWeight * envMapColPdf.rgb * throughput * 1.0, 2.2);// * envMapIntensity;
+                if (true) {
+#define INV_PI     0.31830988618379067
+#define INV_TWO_PI 0.15915494309189533
+                    
+                    float theta = acos(clamp(ray.direction.y, -1.0, 1.0));
+                    float2 uv = float2((PI + atan2(ray.direction.z, ray.direction.x)) * INV_TWO_PI, theta * INV_PI); //+ float2(envMapRot, 0.0);
+                    
+                    uv *= float2(hdriTexture.get_width(), hdriTexture.get_height());
+                    
+                    float3 color = hdriTexture.read(ushort2(uv)).rgb;//texture(envMapTex, uv).rgb;
+                    float pdf = Luminance(color);// / envMapTotalSum;
+                    
+                    float4 envMapColPdf = float4(color, (pdf /* * hdriTexture.get_width() *  hdriTexture.get_height())*/ / (M_2_PI_F * M_PI_F * sin(theta))));
+                    
+                    float misWeight = 1.0;
+                    
+                    // Gather radiance from envmap and use scatterSample.pdf from previous bounce for MIS
+                    misWeight = PowerHeuristic(bsdfSampleRec.pdf, envMapColPdf.w);
+                    
+                    if(misWeight > 0)
+                        radiance +=  pow(misWeight * envMapColPdf.rgb * throughput * 1.0, 2.2);// * envMapIntensity;
+                } else {
+                    radiance += pow(renderData.backgroundColor.xyz, 2.2) * throughput;
+                }
             } else {
 
                 if (false) {
@@ -1272,7 +1276,13 @@ kernel void renderBSDF(        constant RenderUniform               &renderData 
                 } else {
                     radiance += pow(renderData.backgroundColor.xyz, 2.2) * throughput;
                 }
-                if (didHitBBox && renderData.showBBox) radiance += float3(0.01, 0.01, 0.01);
+                if (didHitBBox && renderData.showBBox) {
+                    radiance += float3(0.01, 0.01, 0.01);
+//                    float3 p = ray.origin + ray.direction * bbox.x;
+//                    if (p.x > 0.49 || p.y > 4.9 || p.z > 4.9 || p.x < -4.9) {
+//                        radiance = 1.0;
+//                    }
+                }
             }
             
             sampleTexture.write(float4(radiance, renderData.backgroundColor.w), gid);

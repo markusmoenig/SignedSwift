@@ -27,6 +27,8 @@ struct LineView: View {
     @State private var pointStartPopover    : Bool = false
     @State private var pointEndPopover      : Bool = false
 
+    @State private var currLineId           : UUID? = nil
+
     init(model: Model, project: Project, line: Line) {
         self.model = model
         self.project = project
@@ -34,6 +36,10 @@ struct LineView: View {
         
         _startPoint = State(initialValue: line.startPoint)
         _endPoint = State(initialValue: line.endPoint)
+        
+        if let currLine = model.currLine {
+            _currLineId = State(initialValue: currLine.id)
+        }
     }
     
     var body: some View {
@@ -44,12 +50,14 @@ struct LineView: View {
                 .onTapGesture(perform: {
                     model.lineChanged.send(line)
                 })
+                .foregroundColor(line.id == currLineId ? .accentColor : .primary)
             
             HStack {
                 Button(action: {
                     pointStartPopover = true
                 }) {
                     Label("", systemImage: "circle.fill")
+                        .foregroundStyle(getLineStartColor())
                 }
                 .padding(.top, 5)
                 .padding(.trailing, 10)
@@ -70,7 +78,7 @@ struct LineView: View {
                                         save("start point")
                                         model.build()
                                     }
-                                    //.foregroundColor(point.id == selectedPoint?.id ? .accentColor : .secondary)
+                                    .foregroundStyle(Color(red: Double(point.red), green: Double(point.green), blue: Double(point.blue)))
                             }
                         }
                         .listStyle(PlainListStyle())
@@ -85,6 +93,7 @@ struct LineView: View {
                     pointEndPopover = true
                 }) {
                     Label("", systemImage: "circle.fill")
+                        .foregroundStyle(getLineEndColor())
                 }
                 .padding(.top, 5)
                 .padding(.trailing, 10)
@@ -106,7 +115,7 @@ struct LineView: View {
                                         save("start point")
                                         model.build()
                                     }
-                                    //.foregroundColor(point.id == selectedPoint?.id ? .accentColor : .secondary)
+                                    .foregroundStyle(Color(red: Double(point.red), green: Double(point.green), blue: Double(point.blue)))
                             }
                         }
                         .listStyle(PlainListStyle())
@@ -115,7 +124,31 @@ struct LineView: View {
                     .frame(width: 200, height: 400)
                 }
             }
+            
+            .onReceive(self.model.lineChanged) { line in
+                if let line = line {
+                    currLineId = line.id
+                } else {
+                    currLineId = nil
+                }
+            }
          }
+    }
+    
+    func getLineStartColor() -> Color {
+        if let point = model.getPoint(line.startPoint) {
+            return Color(red: Double(point.red), green: Double(point.green), blue: Double(point.blue))
+        }
+        
+        return Color.black
+    }
+    
+    func getLineEndColor() -> Color {
+        if let point = model.getPoint(line.endPoint) {
+            return Color(red: Double(point.red), green: Double(point.green), blue: Double(point.blue))
+        }
+        
+        return Color.black
     }
     
     /// Save the context

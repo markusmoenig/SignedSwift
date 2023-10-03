@@ -30,21 +30,20 @@ struct ShapeView: View {
     @State var radiusValue                  : Float = 0
     
     @State var sizeXValue                   : Float = 0
-    @State var sizeXValueText               : String = ""
-
     @State var sizeYValue                   : Float = 0
-    @State var sizeYValueText               : String = ""
-    
     @State var sizeZValue                   : Float = 0
-    @State var sizeZValueText               : String = ""
     
+    @State var roundingValue                : Float = 0
+
+    @State var lineOffsetValue              : Float = 0
+    @State var lineSizeValue                : Float = 0
+
     @State private var materialPopover      : Bool = false
 
     @State var noiseValue                   : Float = 0
     @State var onionValue                   : Float = 0
 
     @State var cutOffValue                  : Float = 0
-    @State var cutOffValueText              : String = ""
     
     @State var materialId                   : UUID? = nil
     
@@ -65,23 +64,21 @@ struct ShapeView: View {
         }
         self._blendModeName = State(initialValue: shape.blendModeName!)
         
-        if shape.shapeName == "Sphere" {
-            self._radiusValue = State(initialValue: shape.radius)
-        } else
-        if shape.shapeName == "Box" {
-            self._sizeXValue = State(initialValue: shape.sizeX)
-            self._sizeXValueText = State(initialValue: String(format: "%.03f", shape.sizeX))
-            
-            self._sizeYValue = State(initialValue: shape.sizeY)
-            self._sizeYValueText = State(initialValue: String(format: "%.03f", shape.sizeY))
-            
-            self._sizeZValue = State(initialValue: shape.sizeZ)
-            self._sizeZValueText = State(initialValue: String(format: "%.03f", shape.sizeZ))
-        }
+        self._radiusValue = State(initialValue: shape.radius)
+        self._sizeXValue = State(initialValue: shape.sizeX)
+        self._sizeYValue = State(initialValue: shape.sizeY)
+        self._sizeZValue = State(initialValue: shape.sizeZ)
+        
+        self._roundingValue = State(initialValue: shape.rounding)
+        
+        self._lineOffsetValue = State(initialValue: shape.lineOffset)
+        self._lineSizeValue = State(initialValue: shape.lineSize)
         
         self._smoothingValue = State(initialValue: shape.smoothing)
-        
         self._noiseValue = State(initialValue: shape.noise)
+        
+        self._onionValue = State(initialValue: shape.onion)
+        self._cutOffValue = State(initialValue: shape.cutOffX)
     }
     
     var body: some View {
@@ -121,56 +118,87 @@ struct ShapeView: View {
                 Text(shapeName)
             })
             
-            if shapeName == "Sphere" {
-                FloatView(name: "Radius", nameWidth: nameWidth, value: $radiusValue, range: float2(0.001, 0.5))
-                    .onChange(of: radiusValue, perform: { value in
-                        shape.radius = value
+            if let _ = model.getLine(shape.line) {
+                
+                FloatView(name: "Line Offset", nameWidth: nameWidth, value: $lineOffsetValue, range: float2(-1.0, 1.0))
+                    .onChange(of: lineOffsetValue, perform: { value in
+                        shape.lineOffset = value
                         model.build()
-                        save("Radius")
+                        save("Line Offset")
                     })
-            } else
-            if shapeName == "Box" {
-                HStack {
-                    Text("Size X")
-                    
-                    Slider(value: Binding<Float>(get: {sizeXValue}, set: { v in
-                        sizeXValue = v
-                        sizeXValueText = String(format: "%.03f", v)
-                        shape.sizeX = v
+                
+                FloatView(name: "Line Size", nameWidth: nameWidth, value: $lineSizeValue, range: float2(0.001, 1.0))
+                    .onChange(of: lineSizeValue, perform: { value in
+                        shape.lineSize = value
                         model.build()
-                        save("Size")
-                    }), in: Float(0.001)...Float(1.5))
+                        save("Line Size")
+                    })
+                
+                if shapeName == "Cylinder" {
+                    FloatView(name: "Radius", nameWidth: nameWidth, value: $radiusValue, range: float2(0.001, 0.5))
+                        .onChange(of: radiusValue, perform: { value in
+                            shape.radius = value
+                            model.build()
+                            save("Radius")
+                        })
+                } else
+                if shapeName == "Box" {
                     
-                    Text(sizeXValueText)
-                        .frame(maxWidth: 40)
+                    FloatView(name: "Thickness", nameWidth: nameWidth, value: $sizeYValue, range: float2(0.001, 1.0))
+                        .onChange(of: sizeYValue, perform: { value in
+                            shape.sizeY = value
+                            model.build()
+                            save("SizeY")
+                        })
+                    
+                    FloatView(name: "Depth", nameWidth: nameWidth, value: $sizeZValue, range: float2(0.001, 1.0))
+                        .onChange(of: sizeZValue, perform: { value in
+                            shape.sizeZ = value
+                            model.build()
+                            save("SizeZ")
+                        })
+                    
+                    FloatView(name: "Rounding", nameWidth: nameWidth, value: $roundingValue, range: float2(0.001, 0.5))
+                        .onChange(of: roundingValue, perform: { value in
+                            shape.rounding = value
+                            model.build()
+                            save("SizeZ")
+                        })
                 }
-                HStack {
-                    Text("Size Y")
+                
+            } else {
+                
+                // Point Shapes
+                
+                if shapeName == "Sphere" {
+                    FloatView(name: "Radius", nameWidth: nameWidth, value: $radiusValue, range: float2(0.001, 0.5))
+                        .onChange(of: radiusValue, perform: { value in
+                            shape.radius = value
+                            model.build()
+                            save("Radius")
+                        })
+                } else
+                if shapeName == "Box" {
+                    FloatView(name: "Width", nameWidth: nameWidth, value: $sizeXValue, range: float2(0.001, 1.0))
+                        .onChange(of: sizeXValue, perform: { value in
+                            shape.sizeX = value
+                            model.build()
+                            save("SizeX")
+                        })
                     
-                    Slider(value: Binding<Float>(get: {sizeYValue}, set: { v in
-                        sizeYValue = v
-                        sizeYValueText = String(format: "%.03f", v)
-                        shape.sizeY = v
-                        model.build()
-                        save("Size")
-                    }), in: Float(0.001)...Float(1.5))
+                    FloatView(name: "Height", nameWidth: nameWidth, value: $sizeYValue, range: float2(0.001, 1.0))
+                        .onChange(of: sizeYValue, perform: { value in
+                            shape.sizeY = value
+                            model.build()
+                            save("SizeY")
+                        })
                     
-                    Text(sizeYValueText)
-                        .frame(maxWidth: 40)
-                }
-                HStack {
-                    Text("Size Z")
-                    
-                    Slider(value: Binding<Float>(get: {sizeZValue}, set: { v in
-                        sizeZValue = v
-                        sizeZValueText = String(format: "%.03f", v)
-                        shape.sizeZ = v
-                        model.build()
-                        save("Size")
-                    }), in: Float(0.001)...Float(1.5))
-                    
-                    Text(sizeZValueText)
-                        .frame(maxWidth: 40)
+                    FloatView(name: "Depth", nameWidth: nameWidth, value: $sizeZValue, range: float2(0.001, 1.0))
+                        .onChange(of: sizeZValue, perform: { value in
+                            shape.sizeZ = value
+                            model.build()
+                            save("SizeZ")
+                        })
                 }
             }
             
@@ -231,27 +259,19 @@ struct ShapeView: View {
                     save("Noise")
                 })
             
-            FloatView(name: "Onion", nameWidth: nameWidth, value: $onionValue, range: float2(0.0, 0.1))
+            FloatView(name: "Shell", nameWidth: nameWidth, value: $onionValue, range: float2(0.0, 0.1))
                 .onChange(of: onionValue, perform: { value in
                     shape.onion = value
                     model.build()
                     save("Onion")
                 })
             
-            HStack {
-                Text("CutOffX")
-                
-                Slider(value: Binding<Float>(get: {cutOffValue}, set: { v in
-                    cutOffValue = v
-                    cutOffValueText = String(format: "%.02f", v)
-                    shape.cutOffX = v
+            FloatView(name: "Cut Off", nameWidth: nameWidth, value: $cutOffValue, range: float2(0.0, 0.5))
+                .onChange(of: cutOffValue, perform: { value in
+                    shape.cutOffX = value
                     model.build()
-                    save("CutOffX")
-                }), in: Float(0.001)...Float(1.0))
-                
-                Text(cutOffValueText)
-                    .frame(maxWidth: 40)
-            }
+                    save("Cut Off")
+                })
         }
     }
     

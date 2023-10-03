@@ -167,7 +167,7 @@ public class SMTKView       : MTKView
             let size = float2(Float(frame.width), Float(frame.height))
             if let rc = model.modeler?.getSceneHit(mousePos / size, size) {
                 let id = rc.2
-                
+                                
                 for (i, uuid) in model.pointMap {
                     if id > i - 0.005 && id < i + 0.005 {
                         if let project = model.currProject {

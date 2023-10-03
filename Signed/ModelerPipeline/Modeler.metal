@@ -207,36 +207,56 @@ float applyModelerData(float3 uv, float dist, constant ModelerUniform &mData, fl
     
     float3 p = uv - position;
     
-    p.yz = rotatePivot(p.yz, radians(mData.rotation.x), mData.pivot.yz);
-    p.xz = rotatePivot(p.xz, radians(mData.rotation.y), mData.pivot.xz);
-    p.xy = rotatePivot(p.xy, radians(mData.rotation.z), mData.pivot.xy);
+//    p.yz = rotatePivot(p.yz, radians(mData.rotation.x), mData.pivot.yz);
+//    p.xz = rotatePivot(p.xz, radians(mData.rotation.y), mData.pivot.xz);
+//    p.xy = rotatePivot(p.xy, radians(mData.rotation.z), mData.pivot.xy);
+    
+    p.yz = rotatePivot(p.yz, mData.rotation.x, mData.pivot.yz);
+    p.xz = rotatePivot(p.xz, mData.rotation.y, mData.pivot.xz);
+    p.xy = rotatePivot(p.xy, mData.rotation.z, mData.pivot.xy);
     
     //p = opRepLim(p, mData.repDistance * scale / Modeler_Global_Scale, mData.repLowerLimit, mData.repUpperLimit * float3(valueNoiseFBM(p * mData.repNoise.x / scale, 5), valueNoiseFBM(p * mData.repNoise.y / scale, 5), valueNoiseFBM(p * mData.repNoise.z / scale, 5)));
     
-    p = opRepLim(p, mData.repDistance * scale, mData.repLowerLimit, mData.repUpperLimit);
-
+    //p = opRepLim(p, mData.repDistance * scale, 1, 1);//mData.repLowerLimit, mData.repUpperLimit);
+        
     if (mData.primitiveType == Modeler_Shape_Heightfield) {
         newDist = uv.y - (mData.position.y + valueNoiseFBM(p * mData.heightFrequency, mData.heightOctaves) * mData.heightScale);
     } else
     if (mData.primitiveType == Modeler_Shape_Sphere) {
-        newDist = sdSphere(p, mData.radius * scale);
+        newDist = sdSphere(p, mData.size.x * scale - mData.onion * scale);
+        
+        if (mData.onion > 0) {
+            newDist = abs(newDist) - mData.onion;
+        }
+        
+        newDist = max(newDist, abs(p.x) - mData.size.x + mData.max.x);
     } else
     if (mData.primitiveType == Modeler_Shape_Box) {
-        newDist = sdRoundBox(p, mData.size * scale, mData.rounding);
-        //newDist -= valueNoiseFBM(p * 30, 5) * 0.02;
+        newDist = sdRoundBox(p, mData.size * scale - mData.onion * scale, mData.rounding);
+
+        if (mData.onion > 0) {
+            newDist = abs(newDist) - mData.onion;
+        }
+        
+        newDist = max(newDist, abs(p.x) - mData.size.x + mData.max.x);
     } else
     if (mData.primitiveType == Modeler_Shape_Cylinder) {
-//        newDist = sdRoundedCylinder(p, mData.radius * scale, mData.rounding, mData.height * scale);
-        newDist = sdCappedCylinder(p, mData.radius * scale, mData.height * scale);
+        newDist = sdCappedCylinder(p, mData.radius * scale - mData.onion * scale, mData.size.x * scale);
+        
+        if (mData.onion > 0) {
+            newDist = abs(newDist) - mData.onion;
+        }
+        
+        newDist = max(newDist, abs(p.x) - mData.size.x + mData.max.x);
     }
     
-    if (mData.onion > 0) {
-        newDist = abs(newDist) - mData.onion;
-    }
-    
-    newDist = max(newDist, p.x - mData.max.x);
-    newDist = max(newDist, p.y - mData.max.y);
-    newDist = max(newDist, p.z - mData.max.z);
+//    if (mData.onion > 0) {
+//        newDist = abs(newDist) - mData.onion;
+//    }
+//    
+//    newDist = max(newDist, p.x - mData.size.x + mData.max.x);
+//    newDist = max(newDist, p.y - mData.max.y);
+//    newDist = max(newDist, p.z - mData.max.z);
 
     // Noise
 
