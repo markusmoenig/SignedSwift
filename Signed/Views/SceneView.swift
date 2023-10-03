@@ -966,8 +966,9 @@ struct SceneView: View {
                             .cornerRadius(10.0)
                         }
                     }
+#if os(OSX)
                     .interactiveDismissDisabled(dismissable)
-
+#endif
                     #if os(iOS)
                     .frame(width: 300, height: 600)
                     #else

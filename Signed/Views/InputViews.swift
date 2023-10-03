@@ -41,9 +41,14 @@ struct FloatView: View {
                 floatValue = v
                 floatValueText = String(format: "%.03f", v)
             }), in: range.x...range.y)
+            .controlSize(.mini)
             
             Text(floatValueText)
+#if os(iOS)
+                .frame(maxWidth: 55)
+#else
                 .frame(maxWidth: 45)
+#endif
                 .onTapGesture {
                     editPopover = true
                 }

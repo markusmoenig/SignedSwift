@@ -229,7 +229,8 @@ float applyModelerData(float3 uv, float dist, constant ModelerUniform &mData, fl
             newDist = abs(newDist) - mData.onion;
         }
         
-        newDist = max(newDist, abs(p.x) - mData.size.x + mData.max.x);
+        newDist = max(newDist, p.x - mData.size.x + mData.max.x);
+        newDist = max(newDist, -p.x - mData.size.x + mData.max.y);
     } else
     if (mData.primitiveType == Modeler_Shape_Box) {
         newDist = sdRoundBox(p, mData.size * scale - mData.onion * scale, mData.rounding);
@@ -238,7 +239,8 @@ float applyModelerData(float3 uv, float dist, constant ModelerUniform &mData, fl
             newDist = abs(newDist) - mData.onion;
         }
         
-        newDist = max(newDist, abs(p.x) - mData.size.x + mData.max.x);
+        newDist = max(newDist, p.x - mData.size.x + mData.max.x);
+        newDist = max(newDist, -p.x - mData.size.x + mData.max.y);
     } else
     if (mData.primitiveType == Modeler_Shape_Cylinder) {
         newDist = sdCappedCylinder(p, mData.radius * scale - mData.onion * scale, mData.size.x * scale);
@@ -247,7 +249,8 @@ float applyModelerData(float3 uv, float dist, constant ModelerUniform &mData, fl
             newDist = abs(newDist) - mData.onion;
         }
         
-        newDist = max(newDist, abs(p.x) - mData.size.x + mData.max.x);
+        newDist = max(newDist, p.x - mData.size.x + mData.max.x);
+        newDist = max(newDist, -p.x - mData.size.x + mData.max.y);
     }
     
 //    if (mData.onion > 0) {

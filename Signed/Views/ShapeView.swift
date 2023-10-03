@@ -21,7 +21,11 @@ struct ShapeView: View {
     var project                             : Project
     let shape                               : Shape
         
+#if os(iOS)
+    let nameWidth                           : CGFloat = 85
+#else
     let nameWidth                           : CGFloat = 70
+#endif
     
     @State var shapeName                    : String
     @State var blendModeName                : String
@@ -43,8 +47,9 @@ struct ShapeView: View {
     @State var noiseValue                   : Float = 0
     @State var onionValue                   : Float = 0
 
-    @State var cutOffValue                  : Float = 0
-    
+    @State var cutOffMaxValue               : Float = 0
+    @State var cutOffMinValue               : Float = 0
+
     @State var materialId                   : UUID? = nil
     
     init(model: Model, project: Project, shape: Shape) {
@@ -78,201 +83,236 @@ struct ShapeView: View {
         self._noiseValue = State(initialValue: shape.noise)
         
         self._onionValue = State(initialValue: shape.onion)
-        self._cutOffValue = State(initialValue: shape.cutOffX)
+        self._cutOffMaxValue = State(initialValue: shape.cutOffMax)
+        self._cutOffMinValue = State(initialValue: shape.cutOffMin)
     }
     
     var body: some View {
         
-        VStack(alignment: .leading) {
-            Text(shape.name!)
-                .font(.system(size: 18))
-                .onTapGesture(perform: {
-                })
-            
-            Menu(content: {
-                Button(action: {
-                    shapeName = "Sphere"
-                    shape.shapeName = "Sphere"
-                    save("Change shape")
-                    model.build()
-                }) {
-                    Text("Sphere")
-                }
-                Button(action: {
-                    shapeName = "Box"
-                    shape.shapeName = "Box"
-                    save("Change shape")
-                    model.build()
-                }) {
-                    Text("Box")
-                }
-                Button(action: {
-                    shapeName = "Cylinder"
-                    shape.shapeName = "Cylinder"
-                    save("Change shape")
-                    model.build()
-                }) {
-                    Text("Cylinder")
-                }
-            }, label: {
-                Text(shapeName)
+        Text(shape.name!)
+            .font(.system(size: 18))
+            .onTapGesture(perform: {
             })
-            
-            if let _ = model.getLine(shape.line) {
-                
-                FloatView(name: "Line Offset", nameWidth: nameWidth, value: $lineOffsetValue, range: float2(-1.0, 1.0))
-                    .onChange(of: lineOffsetValue, perform: { value in
-                        shape.lineOffset = value
-                        model.build()
-                        save("Line Offset")
-                    })
-                
-                FloatView(name: "Line Size", nameWidth: nameWidth, value: $lineSizeValue, range: float2(0.001, 1.0))
-                    .onChange(of: lineSizeValue, perform: { value in
-                        shape.lineSize = value
-                        model.build()
-                        save("Line Size")
-                    })
-                
-                if shapeName == "Cylinder" {
-                    FloatView(name: "Radius", nameWidth: nameWidth, value: $radiusValue, range: float2(0.001, 0.5))
-                        .onChange(of: radiusValue, perform: { value in
-                            shape.radius = value
-                            model.build()
-                            save("Radius")
-                        })
-                } else
-                if shapeName == "Box" {
-                    
-                    FloatView(name: "Thickness", nameWidth: nameWidth, value: $sizeYValue, range: float2(0.001, 1.0))
-                        .onChange(of: sizeYValue, perform: { value in
-                            shape.sizeY = value
-                            model.build()
-                            save("SizeY")
-                        })
-                    
-                    FloatView(name: "Depth", nameWidth: nameWidth, value: $sizeZValue, range: float2(0.001, 1.0))
-                        .onChange(of: sizeZValue, perform: { value in
-                            shape.sizeZ = value
-                            model.build()
-                            save("SizeZ")
-                        })
-                    
-                    FloatView(name: "Rounding", nameWidth: nameWidth, value: $roundingValue, range: float2(0.001, 0.5))
-                        .onChange(of: roundingValue, perform: { value in
-                            shape.rounding = value
-                            model.build()
-                            save("SizeZ")
-                        })
-                }
-                
-            } else {
-                
-                // Point Shapes
-                
-                if shapeName == "Sphere" {
-                    FloatView(name: "Radius", nameWidth: nameWidth, value: $radiusValue, range: float2(0.001, 0.5))
-                        .onChange(of: radiusValue, perform: { value in
-                            shape.radius = value
-                            model.build()
-                            save("Radius")
-                        })
-                } else
-                if shapeName == "Box" {
-                    FloatView(name: "Width", nameWidth: nameWidth, value: $sizeXValue, range: float2(0.001, 1.0))
-                        .onChange(of: sizeXValue, perform: { value in
-                            shape.sizeX = value
-                            model.build()
-                            save("SizeX")
-                        })
-                    
-                    FloatView(name: "Height", nameWidth: nameWidth, value: $sizeYValue, range: float2(0.001, 1.0))
-                        .onChange(of: sizeYValue, perform: { value in
-                            shape.sizeY = value
-                            model.build()
-                            save("SizeY")
-                        })
-                    
-                    FloatView(name: "Depth", nameWidth: nameWidth, value: $sizeZValue, range: float2(0.001, 1.0))
-                        .onChange(of: sizeZValue, perform: { value in
-                            shape.sizeZ = value
-                            model.build()
-                            save("SizeZ")
-                        })
-                }
-            }
-            
-            Menu(content: {
-                Button(action: {
-                    blendModeName = "Add"
-                    shape.blendModeName = "Add"
-                    save("Change shape")
-                    model.build()
-                }) {
-                    Text("Add")
-                }
-                Button(action: {
-                    blendModeName = "Subtract"
-                    shape.blendModeName = "Subtract"
-                    save("Change shape")
-                    model.build()
-                }) {
-                    Text("Subtract")
-                }
-            }, label: {
-                Text("Blend: " + blendModeName)
-            })
-            
-            FloatView(name: "Smoothing", nameWidth: nameWidth, value: $smoothingValue, range: float2(0.0, 0.5))
-                .onChange(of: smoothingValue, perform: { value in
-                    shape.smoothing = value
-                    model.build()
-                    save("Smoothing")
-                })
-            
-            Button(action: {
-                materialPopover = true
-            }) {
-                Text("Material")
-            }
-            .popover(isPresented: self.$materialPopover,
-                     arrowEdge: .leading
-            ) {
+        
+            TabView {
+
                 VStack(alignment: .leading) {
-                    MaterialPicker(model: model, id: $materialId)
+                    
+                    Menu(content: {
+                        Button(action: {
+                            shapeName = "Sphere"
+                            shape.shapeName = "Sphere"
+                            save("Change shape")
+                            model.build()
+                        }) {
+                            Text("Sphere")
+                        }
+                        Button(action: {
+                            shapeName = "Box"
+                            shape.shapeName = "Box"
+                            save("Change shape")
+                            model.build()
+                        }) {
+                            Text("Box")
+                        }
+                        Button(action: {
+                            shapeName = "Cylinder"
+                            shape.shapeName = "Cylinder"
+                            save("Change shape")
+                            model.build()
+                        }) {
+                            Text("Cylinder")
+                        }
+                    }, label: {
+                        Text(shapeName)
+                    })
+                    
+                    
+                    if let _ = model.getLine(shape.line) {
+                        
+                        FloatView(name: "Line Offset", nameWidth: nameWidth, value: $lineOffsetValue, range: float2(-1.0, 1.0))
+                            .onChange(of: lineOffsetValue, perform: { value in
+                                shape.lineOffset = value
+                                model.build()
+                                save("Line Offset")
+                            })
+                        
+                        FloatView(name: "Line Size", nameWidth: nameWidth, value: $lineSizeValue, range: float2(0.001, 1.0))
+                            .onChange(of: lineSizeValue, perform: { value in
+                                shape.lineSize = value
+                                model.build()
+                                save("Line Size")
+                            })
+                        
+                        if shapeName == "Cylinder" {
+                            FloatView(name: "Radius", nameWidth: nameWidth, value: $radiusValue, range: float2(0.001, 0.5))
+                                .onChange(of: radiusValue, perform: { value in
+                                    shape.radius = value
+                                    model.build()
+                                    save("Radius")
+                                })
+                        } else
+                        if shapeName == "Box" {
+                            
+                            FloatView(name: "Thickness", nameWidth: nameWidth, value: $sizeYValue, range: float2(0.001, 1.0))
+                                .onChange(of: sizeYValue, perform: { value in
+                                    shape.sizeY = value
+                                    model.build()
+                                    save("SizeY")
+                                })
+                            
+                            FloatView(name: "Depth", nameWidth: nameWidth, value: $sizeZValue, range: float2(0.001, 1.0))
+                                .onChange(of: sizeZValue, perform: { value in
+                                    shape.sizeZ = value
+                                    model.build()
+                                    save("SizeZ")
+                                })
+                            
+                            FloatView(name: "Rounding", nameWidth: nameWidth, value: $roundingValue, range: float2(0.001, 0.5))
+                                .onChange(of: roundingValue, perform: { value in
+                                    shape.rounding = value
+                                    model.build()
+                                    save("SizeZ")
+                                })
+                        }
+                        
+                    } else {
+                        
+                        // Point Shapes
+                        
+                        if shapeName == "Sphere" {
+                            FloatView(name: "Radius", nameWidth: nameWidth, value: $radiusValue, range: float2(0.001, 0.5))
+                                .onChange(of: radiusValue, perform: { value in
+                                    shape.radius = value
+                                    model.build()
+                                    save("Radius")
+                                })
+                        } else
+                        if shapeName == "Box" {
+                            FloatView(name: "Width", nameWidth: nameWidth, value: $sizeXValue, range: float2(0.001, 1.0))
+                                .onChange(of: sizeXValue, perform: { value in
+                                    shape.sizeX = value
+                                    model.build()
+                                    save("SizeX")
+                                })
+                            
+                            FloatView(name: "Height", nameWidth: nameWidth, value: $sizeYValue, range: float2(0.001, 1.0))
+                                .onChange(of: sizeYValue, perform: { value in
+                                    shape.sizeY = value
+                                    model.build()
+                                    save("SizeY")
+                                })
+                            
+                            FloatView(name: "Depth", nameWidth: nameWidth, value: $sizeZValue, range: float2(0.001, 1.0))
+                                .onChange(of: sizeZValue, perform: { value in
+                                    shape.sizeZ = value
+                                    model.build()
+                                    save("SizeZ")
+                                })
+                        }
+                    }
+                    
+                    Button(action: {
+                        materialPopover = true
+                    }) {
+                        Text("Material")
+                    }
+                    .popover(isPresented: self.$materialPopover,
+                             arrowEdge: .leading
+                    ) {
+                        VStack(alignment: .leading) {
+                            MaterialPicker(model: model, id: $materialId)
+                        }
+                    }
+                    .onChange(of: materialId, perform: { value in
+                        if materialId != shape.material {
+                            shape.material = materialId
+                            model.build()
+                            save("material")
+                        }
+                    })
+                    
+                    Spacer()
+                }
+                .tabItem {
+                    Label("Geometry", systemImage: "cube")
+                }
+
+                VStack(alignment: .leading) {
+                    
+                    Menu(content: {
+                        Button(action: {
+                            blendModeName = "Add"
+                            shape.blendModeName = "Add"
+                            save("Change shape")
+                            model.build()
+                        }) {
+                            Text("Add")
+                        }
+                        Button(action: {
+                            blendModeName = "Subtract"
+                            shape.blendModeName = "Subtract"
+                            save("Change shape")
+                            model.build()
+                        }) {
+                            Text("Subtract")
+                        }
+                    }, label: {
+                        Text("Blend: " + blendModeName)
+                    })
+                    
+                    FloatView(name: "Smoothing", nameWidth: nameWidth, value: $smoothingValue, range: float2(0.0, 0.5))
+                        .onChange(of: smoothingValue, perform: { value in
+                            shape.smoothing = value
+                            model.build()
+                            save("Smoothing")
+                        })
+                    
+                    Spacer()
+                }
+                .tabItem {
+                    Label("Boolean", systemImage: "circle.dotted.and.circle")
+                }
+
+                VStack(alignment: .leading) {
+                    FloatView(name: "Noise", nameWidth: nameWidth, value: $noiseValue, range: float2(0.0, 2.0))
+                        .onChange(of: noiseValue, perform: { value in
+                            shape.noise = value
+                            model.build()
+                            save("Noise")
+                        })
+                    
+                    FloatView(name: "Shell", nameWidth: nameWidth, value: $onionValue, range: float2(0.0, 0.1))
+                        .onChange(of: onionValue, perform: { value in
+                            shape.onion = value
+                            model.build()
+                            save("Onion")
+                        })
+                    
+                    FloatView(name: "Cutoff Max", nameWidth: nameWidth, value: $cutOffMaxValue, range: float2(0.0, 0.5))
+                        .onChange(of: cutOffMaxValue, perform: { value in
+                            shape.cutOffMax = value
+                            model.build()
+                            save("Cut Off")
+                        })
+                    
+                    FloatView(name: "Cutoff Min", nameWidth: nameWidth, value: $cutOffMinValue, range: float2(0.0, 0.5))
+                        .onChange(of: cutOffMinValue, perform: { value in
+                            shape.cutOffMin = value
+                            model.build()
+                            save("Cut Off")
+                        })
+                    Spacer()
+                }
+                .tabItem {
+                    Label("Modifier", systemImage: "gearshape")
                 }
             }
-            .onChange(of: materialId, perform: { value in
-                if materialId != shape.material {
-                    shape.material = materialId
-                    model.build()
-                    save("material")
-                }
-            })
-                
-            //Text("Modifier")
-            //.bold()
-            FloatView(name: "Noise", nameWidth: nameWidth, value: $noiseValue, range: float2(0.0, 2.0))
-                .onChange(of: noiseValue, perform: { value in
-                    shape.noise = value
-                    model.build()
-                    save("Noise")
-                })
-            
-            FloatView(name: "Shell", nameWidth: nameWidth, value: $onionValue, range: float2(0.0, 0.1))
-                .onChange(of: onionValue, perform: { value in
-                    shape.onion = value
-                    model.build()
-                    save("Onion")
-                })
-            
-            FloatView(name: "Cut Off", nameWidth: nameWidth, value: $cutOffValue, range: float2(0.0, 0.5))
-                .onChange(of: cutOffValue, perform: { value in
-                    shape.cutOffX = value
-                    model.build()
-                    save("Cut Off")
-                })
-        }
+
+#if os(iOS)
+            .frame(height: 310)
+#endif
+
     }
     
     /// Save the context

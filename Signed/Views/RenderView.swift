@@ -45,6 +45,7 @@ public class SMTKView       : MTKView
     var drawables           : MetalDrawables? = nil
 
     var currentPoint        : Point? = nil
+    var pointChanged        : Bool = false
     
     func reset()
     {
@@ -156,6 +157,8 @@ public class SMTKView       : MTKView
     override public func mouseDown(with event: NSEvent) {
         setMousePos(event)
         
+        pointChanged = false
+        
         if event.clickCount > 1 {
             hasDoubleTap = true
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0 / 60.0) {
@@ -249,8 +252,7 @@ public class SMTKView       : MTKView
                         point.y = p.y
                         point.z = p.z
                     }
-                    model.pointChanged.send(point)
-                    model.build()
+                    pointChanged = true
                 }
             }
         }
@@ -264,6 +266,14 @@ public class SMTKView       : MTKView
     }
     
     override public func mouseUp(with event: NSEvent) {
+        
+        if pointChanged {
+            if let point = model.currPoint {
+                model.pointChanged.send(point)
+                model.build()
+            }
+            pointChanged = false
+        }
         
         mouseIsDown = false
         hasTap = false
@@ -327,6 +337,13 @@ public class SMTKView       : MTKView
                                 break
                             }
                         }
+                        for l in project.lines?.allObjects as! [Line] {
+                            if l.id == uuid {
+                                model.lineChanged.send(l)
+                                //model.showContext.send((nil, nil, mousePos.x, mousePos.y))
+                                break
+                            }
+                        }
                     }
                 }
             }
@@ -377,6 +394,7 @@ public class SMTKView       : MTKView
     override public func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         mouseIsDown = true
         firstTouch = true
+        pointChanged = false
         if let touch = touches.first {
             let point = touch.location(in: self)
             setMousePos(Float(point.x), Float(point.y))
@@ -388,6 +406,33 @@ public class SMTKView       : MTKView
             let point = touch.location(in: self)
             setMousePos(Float(point.x), Float(point.y))
         }
+        
+        if mode == .Points3D && model.pointEditAxisMode != POINT_AXIS_NONE {
+            if let point = model.currPoint {
+                let size = float2(Float(frame.width), Float(frame.height))
+                if let rc = model.modeler?.getPointCloudHit(mousePos / size, size) {
+                    var p = float3(rc.x, rc.y, rc.z)
+                    
+                    p.x = p.x.clamped(to: -0.5 ... 0.5)
+                    p.y = p.y.clamped(to: -0.5 ... 0.5)
+                    p.z = p.z.clamped(to: -0.5 ... 0.5)
+
+                    if model.pointEditAxisMode == POINT_AXIS_XZ {
+                        point.x = p.x
+                        point.z = p.z
+                    } else
+                    if model.pointEditAxisMode == POINT_AXIS_XY {
+                        point.x = p.x
+                        point.y = p.y
+                    } else
+                    if model.pointEditAxisMode == POINT_AXIS_YZ {
+                        point.y = p.y
+                        point.z = p.z
+                    }
+                    pointChanged = true
+                }
+            }
+        }
     }
 
     override public func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -395,6 +440,14 @@ public class SMTKView       : MTKView
         if let touch = touches.first {
             let point = touch.location(in: self)
             setMousePos(Float(point.x), Float(point.y))
+        }
+        
+        if pointChanged {
+            if let point = model.currPoint {
+                model.pointChanged.send(point)
+                model.build()
+            }
+            pointChanged = false
         }
     }
     #endif

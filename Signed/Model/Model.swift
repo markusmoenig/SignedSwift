@@ -254,7 +254,7 @@ class Model: NSObject, ObservableObject {
                 if let data = cmd.dataGroups.getGroup("Modifier") {
                     data.set("noise", shape.noise)
                     data.set("onion", shape.onion)
-                    data.set("max", float3(shape.cutOffX, 10.0, 10.0))
+                    data.set("max", float3(shape.cutOffMax, shape.cutOffMin, 10.0))
                 }
                 
                 return cmd

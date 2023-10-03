@@ -417,7 +417,7 @@ class ModelerPipeline
         print("allocateKit", width, height, depth)
                 
         //print(device.supportsFeatureSet(.macOS_GPUFamily2_v1))
-        modelerKit.modelTexture = allocateTexture3D(width: width, height: height, depth: depth, format: .r32Float)
+        modelerKit.modelTexture = allocateTexture3D(width: width, height: height, depth: depth, format: .r16Float)
 //        #if os(OSX)
 //        modelerKit.colorTexture = allocateTexture3D(width: width, height: height, depth: depth, format: .rgba16Float)
 //        modelerKit.materialTexture1 = allocateTexture3D(width: width, height: height, depth: depth, format: .rgba16Float)
