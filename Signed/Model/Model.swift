@@ -78,10 +78,10 @@ class Model: NSObject, ObservableObject {
     
     /// Current line changed
     let lineChanged                         = PassthroughSubject<Line?, Never>()
-    
-    /// Show Context
-    let showContext                         = PassthroughSubject<(Point?, Shape?, Float, Float), Never>()
-    
+
+    /// Current shape changed
+    let shapeChanged                        = PassthroughSubject<Shape?, Never>()
+
     /// Project needs to rebuild
     let rebuild                             = PassthroughSubject<Void, Never>()
     

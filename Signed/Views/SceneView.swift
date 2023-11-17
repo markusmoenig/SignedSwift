@@ -37,7 +37,6 @@ struct SceneView: View {
     @State private var lineName                         : String = ""
     
     @State private var editPointPopover                 : Bool = false
-    @State private var editContextPopover               : Bool = false
     @State private var editSettingsPopover              : Bool = false
 
     @State private var editPointsPopover                : Bool = false
@@ -104,29 +103,26 @@ struct SceneView: View {
                     RenderView(model: model, mode: .Render3D)
                         .allowsHitTesting(true)
                     
-                    /*
-                    if editContextPopover {
-                        VStack {
-                            HStack {
-                                Spacer()
-                                Text("CLOSE")
-                                    .onTapGesture {
-                                        editContextPopover = false
-                                    }
-                                
-                                //ShapeView(model: model, project: project, point: selectedPoint!, shape: selectedShape!)
-                            }
-                        }
-                        .frame(width: 100)
-                        .padding(.leading, CGFloat(xOffsetPopup) + 50)
-                        .padding(.bottom, geometry.size.height - CGFloat(yOffsetPopup) - 50)
-                    }*/
-                    
                     if showSideKick {
                         PointCloud(model: model, project: project)
                             .frame(width: geometry.size.width / 4, height: geometry.size.height / 4)
                             .padding(.leading, geometry.size.width - geometry.size.width / 4)
                             .padding(.bottom, 0)
+                    }
+                    
+                    if let shape = selectedShape {
+                        ShapeView(model: model, project: project, shape: shape)
+                            .padding(.leading, geometry.size.width - 300)
+                        #if os (OSX)
+                            .padding(.bottom, geometry.size.height + 110)
+                        #else
+                            .padding(.bottom, geometry.size.height + 310)
+                        #endif
+                            .frame(height: 310)
+//                        #if os(iOS)
+//                            .padding(.bottom, geometry.size.height)
+//                            .frame(height: 400)
+//                        #endif
                     }
                 } else {
                     PointCloud(model: model, project: project)
@@ -208,6 +204,9 @@ struct SceneView: View {
                     }*/
                 } else
                 if let point = selectedPoint {
+                    
+//TODO                    ShapeView(model: model, project: project, shape)
+                    
                     Menu {
                         Button("Rename", action: {
                             renamePointPopover = true
@@ -259,21 +258,6 @@ struct SceneView: View {
                         }
                         .padding()
                     }
-                    
-                    /*
-                    // Edit Shapes
-                    .popover(isPresented: $editContextPopover,
-                             attachmentAnchor: .rect(.rect(CGRectMake(geometry.size.width / 2, geometry.size.height, 200, 300))),//.point(UnitPoint(x:) 0.1, y: 0.5)),
-                             arrowEdge: .bottom
-                    ) {
-                        VStack(alignment: .leading) {
-                            HStack {
-                                Text("Test")
-                            }
-                        }
-                        .padding()
-                        .frame(width: 250)
-                    }*/
                     
                     // Edit point
                     .popover(isPresented: self.$editPointPopover,
@@ -1037,10 +1021,8 @@ struct SceneView: View {
             model.currLine = line
         }
         
-        .onReceive(self.model.showContext) { ctx in
-            self.editContextPopover = true
-            self.xOffsetPopup = ctx.2
-            self.yOffsetPopup = ctx.3
+        .onReceive(self.model.shapeChanged) { shape in
+            selectedShape = shape
         }
         
         .onChange(of: pathTraceIsOn) { newValue in

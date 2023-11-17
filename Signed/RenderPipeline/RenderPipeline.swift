@@ -22,7 +22,7 @@ class RenderKit {
     var maxSamples      : Int32
     
     var icon            = false
-
+    
     func isValid() -> Bool {
         return sampleTexture != nil && outputTexture != nil
     }
@@ -61,7 +61,7 @@ class RenderPipeline
     
     var pointCloudTexture: MTLTexture? = nil
     var hdriTexture     : MTLTexture? = nil
-        
+            
     init(_ model: Model)
     {
         self.model = model
@@ -214,7 +214,7 @@ class RenderPipeline
                         mainKit.renderGPUBusy = true
                         commandBuffer?.addCompletedHandler { cb in
                             mainKit.renderGPUBusy = false
-                            //print("Rendering Time:", (cb.gpuEndTime - cb.gpuStartTime) * 1000, renderKit.samples, renderKit.maxSamples)
+                            print("Rendering Time:", (cb.gpuEndTime - cb.gpuStartTime) * 1000, renderKit.samples, renderKit.maxSamples)
                         }
                         
                         runRender(mainKit)
@@ -418,7 +418,7 @@ class RenderPipeline
             
             var renderName = kit.renderName
             if kit.role == .main {
-                renderName = model.currProject?.trace == true ? "renderBSDF" : "renderPBR"
+                renderName = model.currProject?.trace == true ? "renderBSDF" : "renderDiffuse"
                 if model.currMaterial != nil {
                     renderName = "renderBSDF"
                 }
@@ -431,6 +431,12 @@ class RenderPipeline
                         renderName = "renderBSDF"
                     }
                 }
+            }
+            
+            if renderName == "renderBSDF" {
+                mainRenderKit.maxSamples = 2000
+            } else {
+                mainRenderKit.maxSamples = 10
             }
             
             if let state = renderStates.getComputeState(stateName: renderName) {
@@ -456,8 +462,10 @@ class RenderPipeline
                 computeEncoder.setTexture(kit.materialTexture3, index: 6)
                 computeEncoder.setTexture(kit.materialTexture4, index: 7)
                 
-                if let hdriTexture = hdriTexture {
-                    computeEncoder.setTexture(hdriTexture, index: 9)
+                if renderName == "renderBSDF" {
+                    if let hdriTexture = hdriTexture {
+                        computeEncoder.setTexture(hdriTexture, index: 9)
+                    }
                 }
                 
                 if let renderKit = kit.currentRenderKit {

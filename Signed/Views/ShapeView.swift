@@ -89,10 +89,10 @@ struct ShapeView: View {
     
     var body: some View {
         
-        Text(shape.name!)
-            .font(.system(size: 18))
-            .onTapGesture(perform: {
-            })
+//        Text(shape.name!)
+//            .font(.system(size: 18))
+//            .onTapGesture(perform: {
+//            })
         
             TabView {
 
@@ -309,9 +309,9 @@ struct ShapeView: View {
                 }
             }
 
-#if os(iOS)
+//#if os(iOS)
             .frame(height: 310)
-#endif
+//#endif
 
     }
     

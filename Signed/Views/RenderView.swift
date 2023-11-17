@@ -47,6 +47,9 @@ public class SMTKView       : MTKView
     var currentPoint        : Point? = nil
     var pointChanged        : Bool = false
     
+    var visualEditor        : VisualEditor? = nil
+    var visualEditorActive  : Bool = false
+    
     func reset()
     {
         keysDown = []
@@ -65,6 +68,10 @@ public class SMTKView       : MTKView
                 
                 if let texture = model.renderer?.mainRenderKit.outputTexture {
                     drawables?.drawBox(position: float2(0,0), size: float2(Float(texture.width), Float(texture.height)), rounding: 0, borderSize: 0, onion: 0, fillColor: float4(0,0,0,1), borderColor: float4(0,0,0,0), texture: texture)
+                }
+                
+                if let line = model.currLine {
+                    visualEditor?.drawLine(drawables: drawables!, line: line)
                 }
                 
                 drawables?.encodeEnd()
@@ -104,65 +111,15 @@ public class SMTKView       : MTKView
         }
     }
     
-    #if os(OSX)
-
-    /// Setup the view
-    func platformInit(_ model: Model)
-    {
-        drawables = MetalDrawables(self)
-        
-        if mode == .Render3D {
-            model.setRenderView(self)
-        } else
-        if mode == .Points3D {
-            model.setPointsView(self)
-        }
-
-        self.model = model
-
-        layer?.isOpaque = false
-    }
-    
-    override public var acceptsFirstResponder: Bool { return true }
-
-    /// To get continuous mouse events on macOS
-    override public func updateTrackingAreas()
-    {
-        let options : NSTrackingArea.Options = [.mouseEnteredAndExited, .mouseMoved, .activeInKeyWindow]
-        let trackingArea = NSTrackingArea(rect: self.bounds, options: options,
-                                      owner: self, userInfo: nil)
-        self.addTrackingArea(trackingArea)
-    }
-    
-    func setMousePos(_ event: NSEvent)
-    {
-        var location = event.locationInWindow
-        location.y = location.y - CGFloat(frame.height)
-        location = convert(location, from: nil)
-        
-        mousePos.x = Float(location.x)
-        mousePos.y = -Float(location.y)
-    }
-    
-    override public func keyDown(with event: NSEvent)
-    {
-        keysDown.append(Float(event.keyCode))
-    }
-    
-    override public func keyUp(with event: NSEvent)
-    {
-        keysDown.removeAll{$0 == Float(event.keyCode)}
-    }
-        
-    override public func mouseDown(with event: NSEvent) {
-        setMousePos(event)
-        
+    /// Called when the mouse is pressed or a touch down action occured
+    func touchDownAction() {
+                
         pointChanged = false
         
-        if event.clickCount > 1 {
-            hasDoubleTap = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0 / 60.0) {
-                self.hasDoubleTap = false
+        if let visualEditor = visualEditor {
+            visualEditorActive = visualEditor.mouseDown(pos: mousePos)
+            if visualEditorActive {
+                return
             }
         }
         
@@ -227,9 +184,7 @@ public class SMTKView       : MTKView
         }
     }
     
-    override public func mouseDragged(with event: NSEvent) {
-        setMousePos(event)
-        
+    func touchDraggedAction() {
         if mode == .Points3D && model.pointEditAxisMode != POINT_AXIS_NONE {
             if let point = model.currPoint {
                 let size = float2(Float(frame.width), Float(frame.height))
@@ -256,6 +211,75 @@ public class SMTKView       : MTKView
                 }
             }
         }
+    }
+    
+    #if os(OSX)
+
+    /// Setup the view
+    func platformInit(_ model: Model)
+    {
+        drawables = MetalDrawables(self)
+        
+        if mode == .Render3D {
+            model.setRenderView(self)
+            visualEditor = VisualEditor(model: model)
+        } else
+        if mode == .Points3D {
+            model.setPointsView(self)
+        }
+
+        self.model = model
+
+        layer?.isOpaque = false
+    }
+    
+    override public var acceptsFirstResponder: Bool { return true }
+
+    /// To get continuous mouse events on macOS
+    override public func updateTrackingAreas()
+    {
+        let options : NSTrackingArea.Options = [.mouseEnteredAndExited, .mouseMoved, .activeInKeyWindow]
+        let trackingArea = NSTrackingArea(rect: self.bounds, options: options,
+                                      owner: self, userInfo: nil)
+        self.addTrackingArea(trackingArea)
+    }
+    
+    func setMousePos(_ event: NSEvent)
+    {
+        var location = event.locationInWindow
+        location.y = location.y - CGFloat(frame.height)
+        location = convert(location, from: nil)
+        
+        mousePos.x = Float(location.x)
+        mousePos.y = -Float(location.y)
+    }
+    
+    override public func keyDown(with event: NSEvent)
+    {
+        keysDown.append(Float(event.keyCode))
+    }
+    
+    override public func keyUp(with event: NSEvent)
+    {
+        keysDown.removeAll{$0 == Float(event.keyCode)}
+    }
+        
+    override public func mouseDown(with event: NSEvent) {
+        setMousePos(event)
+                
+        if event.clickCount > 1 {
+            hasDoubleTap = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0 / 60.0) {
+                self.hasDoubleTap = false
+            }
+        }
+        
+        touchDownAction()
+    }
+    
+    override public func mouseDragged(with event: NSEvent) {
+        setMousePos(event)
+        touchDraggedAction()
     }
     
     override public func mouseMoved(with event: NSEvent) {
@@ -290,6 +314,7 @@ public class SMTKView       : MTKView
         
         if mode == .Render3D {
             model.setRenderView(self)
+            visualEditor = VisualEditor(model: model)
         } else
         if mode == .Points3D {
             model.setPointsView(self)
@@ -324,30 +349,7 @@ public class SMTKView       : MTKView
             }
         }
         
-        let size = float2(Float(frame.width), Float(frame.height))
-        if let rc = model.modeler?.getSceneHit(mousePos / size, size) {
-            let id = rc.2
-            
-            for (i, uuid) in model.pointMap {
-                if id > i - 0.005 && id < i + 0.005 {
-                    if let project = model.currProject {
-                        for p in project.points?.allObjects as! [Point] {
-                            if p.id == uuid {
-                                model.pointChanged.send(p)
-                                break
-                            }
-                        }
-                        for l in project.lines?.allObjects as! [Line] {
-                            if l.id == uuid {
-                                model.lineChanged.send(l)
-                                //model.showContext.send((nil, nil, mousePos.x, mousePos.y))
-                                break
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        touchDownAction()
     }
 
     var lastX, lastY    : Float?
@@ -394,7 +396,7 @@ public class SMTKView       : MTKView
     override public func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         mouseIsDown = true
         firstTouch = true
-        pointChanged = false
+        
         if let touch = touches.first {
             let point = touch.location(in: self)
             setMousePos(Float(point.x), Float(point.y))
@@ -407,32 +409,7 @@ public class SMTKView       : MTKView
             setMousePos(Float(point.x), Float(point.y))
         }
         
-        if mode == .Points3D && model.pointEditAxisMode != POINT_AXIS_NONE {
-            if let point = model.currPoint {
-                let size = float2(Float(frame.width), Float(frame.height))
-                if let rc = model.modeler?.getPointCloudHit(mousePos / size, size) {
-                    var p = float3(rc.x, rc.y, rc.z)
-                    
-                    p.x = p.x.clamped(to: -0.5 ... 0.5)
-                    p.y = p.y.clamped(to: -0.5 ... 0.5)
-                    p.z = p.z.clamped(to: -0.5 ... 0.5)
-
-                    if model.pointEditAxisMode == POINT_AXIS_XZ {
-                        point.x = p.x
-                        point.z = p.z
-                    } else
-                    if model.pointEditAxisMode == POINT_AXIS_XY {
-                        point.x = p.x
-                        point.y = p.y
-                    } else
-                    if model.pointEditAxisMode == POINT_AXIS_YZ {
-                        point.y = p.y
-                        point.z = p.z
-                    }
-                    pointChanged = true
-                }
-            }
-        }
+        touchDraggedAction()
     }
 
     override public func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {

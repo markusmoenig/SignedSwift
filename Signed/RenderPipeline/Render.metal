@@ -1696,6 +1696,123 @@ kernel void renderPBR(         constant RenderUniform               &renderData 
     sampleTexture.write(float4(radiance, 1.0), gid);
 }
 
+
+// MARK: Render Entry Point
+kernel void renderDiffuse(     constant RenderUniform               &renderData [[ buffer(0) ]],
+                               constant ModelerUniform              &mData [[ buffer(1) ]],
+                               texture3d<float>                     modelTexture [[ texture(2) ]],
+                               texture3d<float, access::read_write> colorTexture [[ texture(3) ]],
+                               texture3d<float, access::read_write> materialTexture1 [[ texture(4) ]],
+                               texture3d<float, access::read_write> materialTexture2 [[ texture(5) ]],
+                               texture3d<float, access::read_write> materialTexture3 [[ texture(6) ]],
+                               texture3d<float, access::read_write> materialTexture4 [[ texture(7) ]],
+                               texture2d<float, access::write>      sampleTexture [[ texture(8) ]],
+                               uint2 gid                            [[thread_position_in_grid]])
+
+{
+    //float2 uv = float2(in.textureCoordinate.x, 1.0 - in.textureCoordinate.y);
+    float2 size = float2(sampleTexture.get_width(), sampleTexture.get_height());
+    float2 uv = float2(gid) / size;// - float3(0.5);
+
+    float3 ro = renderData.cameraOrigin;
+    float3 rd = renderData.cameraLookAt;
+    float scale = renderData.scale;
+
+    struct DataIn dataIn;
+    
+    dataIn.seed = uv;
+    dataIn.randomVector = renderData.randomVector;
+    dataIn.numOfLights = renderData.numOfLights;
+
+    rd = getCamerayRay(uv, ro, rd, renderData.cameraFov, size, dataIn);
+        
+    Ray ray;
+    ray.origin = ro;
+    ray.direction = rd;
+    
+    float3 radiance = float3(0.0);
+
+    bool editHit; float materialMixValue;
+    
+    bool didHitBBox = false;
+     
+    float r = 0.5 * scale; float3 rectNormal;
+    float2 bbox = boxIntersection(ray.origin, ray.direction, float3(r, r, r), rectNormal);
+
+    float t = INFINITY;
+    float3 normal;
+    float3 hp;
+    
+    if (bbox.y > 0.0) {
+                
+        //float outside = 1.0;
+
+        t = max(bbox.x, 0.000);
+
+        
+        bool hit = false;
+        bool needsNormal = true;
+        didHitBBox = true;
+        
+        // Check for border hit
+        float3 p = ray.origin + ray.direction * t;
+        float d = getDistance(p, modelTexture, mData, editHit, materialMixValue, scale);
+        if (d < 0.) {
+            hit = true;
+            normal = rectNormal;
+            needsNormal = false;
+        } else {
+            for(int i = 0; i < 260; ++i)
+            {
+                float3 p = ray.origin + ray.direction * t;
+                float d = getDistance(p, modelTexture, mData, editHit, materialMixValue, scale);
+                
+                // ---
+
+                if (abs(d) < (0.0001*t*scale)) {
+                    hit = true;
+                    break;
+                }
+                
+                t += abs(d);// * outside;
+
+                if (t >= bbox.y)
+                    break;
+            }
+        }
+        
+        if (hit == true) {
+            float3 position = ray.origin + ray.direction * t;
+            if (needsNormal) {
+                normal = getNormal(position, modelTexture, mData, scale);
+            }
+            hp = position;
+        } else {
+            t = INFINITY;
+        }
+    }
+    
+    if (t == INFINITY) {
+        radiance += pow(renderData.backgroundColor.xyz, 2.2);
+        if (didHitBBox && renderData.showBBox) {
+            radiance += float3(0.01, 0.01, 0.01);
+        }
+        sampleTexture.write(float4(radiance, renderData.backgroundColor.w), gid);
+        return;
+    }
+
+    float4 colorAndRoughness = getMaterialData(hp, colorTexture, scale);
+//    float4 specularMetallicSubsurfaceClearcoat = getMaterialData(hp, materialTexture1, scale);
+//    float4 anisotropicSpecularTintSheenSheenTint = getMaterialData(hp, materialTexture2, scale);
+//    float4 clearcoatGlossSpecTransIor = getMaterialData(hp, materialTexture3, scale);
+    //float4 emissionId = getMaterialData(hp, materialTexture4, scale);
+  
+    float d = dot(normal, normalize(float3(1,2,3)))*.5+.5;
+    float3 color = colorAndRoughness.xyz * d;
+    
+    sampleTexture.write(float4(color, 1.0), gid);
+}
+
 // MARK: Hit Scene Entry Point
 kernel void modelerHitScene(constant ModelerHitUniform           &mData [[ buffer(0) ]],
                             texture3d<float>                     modelTexture [[ texture(1) ]],

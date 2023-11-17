@@ -43,6 +43,7 @@ class RenderStates {
             
             computeStates["renderBSDF"] = createComputeState(name: "renderBSDF")
             computeStates["renderPBR"] = createComputeState(name: "renderPBR")
+            computeStates["renderDiffuse"] = createComputeState(name: "renderDiffuse")
             computeStates["renderAccum"] = createComputeState(name: "renderAccum")
             computeStates["pointCloud"] = createComputeState(name: "pointCloud")
         }

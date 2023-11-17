@@ -41,6 +41,7 @@
 		DDAE89032AC7B70300A2200D /* MaterialView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDAE89022AC7B70300A2200D /* MaterialView.swift */; };
 		DDAE89052AC9254700A2200D /* MaterialPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDAE89042AC9254700A2200D /* MaterialPicker.swift */; };
 		DDAE89102AC9686900A2200D /* kloofendal_48d_partly_cloudy_puresky_4k.exr in Resources */ = {isa = PBXBuildFile; fileRef = DDAE890F2AC967D700A2200D /* kloofendal_48d_partly_cloudy_puresky_4k.exr */; };
+		DDAE89182ACD42C200A2200D /* VisualEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDAE89172ACD42C200A2200D /* VisualEditor.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -83,6 +84,7 @@
 		DDAE89042AC9254700A2200D /* MaterialPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaterialPicker.swift; sourceTree = "<group>"; };
 		DDAE89062AC948A400A2200D /* Metal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Metal.h; sourceTree = "<group>"; };
 		DDAE890F2AC967D700A2200D /* kloofendal_48d_partly_cloudy_puresky_4k.exr */ = {isa = PBXFileReference; lastKnownFileType = file; path = kloofendal_48d_partly_cloudy_puresky_4k.exr; sourceTree = "<group>"; };
+		DDAE89172ACD42C200A2200D /* VisualEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualEditor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -149,6 +151,7 @@
 			children = (
 				DDAE88FE2AC58B3600A2200D /* InputViews.swift */,
 				DD729C182AB83A9400D8F6F2 /* RenderView.swift */,
+				DDAE89172ACD42C200A2200D /* VisualEditor.swift */,
 				DD5E0FC82AC0209200836326 /* MaterialSettings.swift */,
 				DDAE89042AC9254700A2200D /* MaterialPicker.swift */,
 				DD5E0FC62ABFF40F00836326 /* ShapeView.swift */,
@@ -280,6 +283,7 @@
 				DDAE89032AC7B70300A2200D /* MaterialView.swift in Sources */,
 				DDAE88FD2AC42CB900A2200D /* LineView.swift in Sources */,
 				DDAE88FF2AC58B3600A2200D /* InputViews.swift in Sources */,
+				DDAE89182ACD42C200A2200D /* VisualEditor.swift in Sources */,
 				DD729C362AB8644500D8F6F2 /* SignedCommand.swift in Sources */,
 				DD729C442AB8862500D8F6F2 /* SceneView.swift in Sources */,
 				DD729C032AB836FB00D8F6F2 /* SignedApp.swift in Sources */,
